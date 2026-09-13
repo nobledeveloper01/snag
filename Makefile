@@ -64,6 +64,10 @@ splash-check: ## Fail if the launch screen, icon or mark are not what the palett
 brandmark: ## Redraw the icon and docs/mark.png from the palette
 	@python3 scripts/brandmark.py
 
+# No CODE_SIGNING_ALLOWED=NO here, unlike Tender: an unsigned app has no
+# application identifier and the Keychain refuses it (-34018), and the
+# sealing key lives in the Keychain. The simulator signs ad hoc by itself.
+
 # --- code -------------------------------------------------------------------
 
 .PHONY: setup
@@ -97,7 +101,7 @@ test-domain: ## The domain package's tests, on macOS, in seconds
 test-app: ## The app's unit and UI tests on the simulator
 	@[ -n "$(SIM)" ] || { echo "\033[0;33m!\033[0m no simulator found:  make test-app SIM=<udid>"; exit 64; }
 	xcodebuild test -project $(PROJECT) -scheme $(SCHEME) -destination "$(DEST)" \
-	  -derivedDataPath $(DERIVED) CODE_SIGNING_ALLOWED=NO -quiet; rc=$$?; \
+	  -derivedDataPath $(DERIVED) -quiet; rc=$$?; \
 	  xcrun simctl terminate $(SIM) ng.snag.app >/dev/null 2>&1; \
 	  case "$$(xcrun simctl list devices | grep $(SIM))" in *"Snag Tests"*) xcrun simctl shutdown $(SIM) >/dev/null 2>&1;; esac; \
 	  exit $$rc
@@ -106,7 +110,7 @@ test-app: ## The app's unit and UI tests on the simulator
 .PHONY: build
 build: ## Build the app for the simulator
 	xcodebuild build -project $(PROJECT) -scheme $(SCHEME) -destination "$(DEST)" \
-	  -derivedDataPath $(DERIVED) CODE_SIGNING_ALLOWED=NO -quiet
+	  -derivedDataPath $(DERIVED) -quiet
 
 .PHONY: coverage
 coverage: ## Domain coverage with the per-file breakdown
