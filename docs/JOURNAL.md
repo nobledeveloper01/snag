@@ -42,3 +42,40 @@ party's name, and R3 is about watching it get there.
 **Two of five phases need a handset, and the ledger says so on day one.**
 RoomPlan and ARKit do not run in a simulator. Better to write R1 and R2 now
 than to discover them at the end, as Harvest did with Android.
+
+## 2026-09-13 — Phase 0: the bytes, fixed
+
+The domain first: a report, its rooms and items, the three tiers, the
+counter-signature, and the canonical encoding — hand-written, length-
+prefixed, field-ordered, no floats, no maps, no encoder. Twelve tests in
+two milliseconds: round trip for two hundred generated reports, every
+truncation caught, trailing bytes refused, distinct reports never sharing
+bytes, the move-out diff total. Then the fixture: a two-room, six-item
+report encoded once and checked in, 554 bytes, with a test that refuses to
+overwrite it. A one-byte change to the encoder fails it with *"every sealed
+report in the world would read as altered"*, which is the sentence the
+fixture exists to make true.
+
+Then the app: the project file carried over from Tender, the palette from
+DESIGN.md, Inter bundled, the mark, the splash, the empty state, a new
+report, and a walk that adds rooms with their tier chips. Eight app tests
+including the audit on five screens at two sizes; nine gates, each broken on
+purpose. `make ci` exit 0, and the repo is public.
+
+### What surprised us
+
+**`Dimension` is Foundation's.** The domain compiled alone and failed the
+moment a test imported Foundation. `Extent` now, and a note in the model
+about why.
+
+**The audit found four things on the first run, again.** The empty state
+was not in a scroll view and clipped at large sizes; the address field was
+single-line; *Cancel* was a toolbar item, which Tender had already taught;
+and a vertical `TextField`'s inner view sizes to its content whatever frame
+it is given, so the audit measured a 20 pt target — a `TextEditor` owns its
+frame. Four screens, four defects, before any person looked.
+
+**A mutation that does not apply proves nothing.** The counts gate "did not
+fire" on a removed tier because the `sed` was one space off and removed
+nothing. Applied properly, it fired on two documents. Check the mutation
+landed before reading the result.

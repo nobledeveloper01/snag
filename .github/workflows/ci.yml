@@ -1,0 +1,37 @@
+# The same `make ci` that runs locally, on a macOS runner with a pinned Xcode.
+# Local and CI cannot disagree about what "passing" means because they run
+# one target. What CI adds is that nobody has to remember to run it.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  ci:
+    runs-on: macos-26
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Pin Xcode
+        run: |
+          ls -d /Applications/Xcode_26*.app | tail -1
+          sudo xcode-select -s "$(ls -d /Applications/Xcode_26*.app | tail -1)"
+          xcodebuild -version
+
+      - name: Pillow, for the brand mark check
+        # The runner's Python is Homebrew's and refuses pip under PEP 668. The
+        # runner is a throwaway VM, which is the one place that flag is honest.
+        run: python3 -m pip install --user --quiet --break-system-packages Pillow
+
+      - name: A simulator to test on
+        run: |
+          xcrun simctl list runtimes | grep iOS
+          SIM=$(xcrun simctl list devices available | grep -m1 iPhone | grep -oE '[0-9A-F-]{36}')
+          echo "SIM=$SIM" >> "$GITHUB_ENV"
+          xcrun simctl boot "$SIM" || true
+
+      - name: make ci
+        run: make ci SIM="$SIM"
