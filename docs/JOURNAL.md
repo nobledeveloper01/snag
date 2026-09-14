@@ -246,3 +246,28 @@ test host into it at once, and XCTest gives up on the connection before
 the phone is up. `make test-app` now boots and waits for `bootstatus`
 first, which is what the CI workflow had always done, and where it never
 hung.
+
+## 2026-09-14, morning — the hand test, and the hang found
+
+The app driven by hand on the demo simulator, end to end: template, kitchen,
+a prompt, two photographs, review, seal, counter-signature on glass, the
+nine-page PDF read in Preview, a move-out linked to the move-in with the
+old views beside the shutter and the diff on the sealed screen, the
+settings. Two things a person sees that a test did not: the review screen
+said *Living Room* where every other screen says *Living room*, and *Walk
+the flat* put the tenant back on the list instead of in the walk. Both
+fixed; the tests that expected the old landing were rewritten.
+
+### What surprised us
+
+**The hang was our own scene delegate.** "The test runner hung before
+establishing connection" — one run in three, only the unit-test host,
+never crashing, its own log going quiet with the window up and no XCTest
+line ever written. The quick action had been wired through
+`UIApplicationDelegateAdaptor` with a `configurationForConnecting` that
+named a scene delegate class of ours, and that replaced the one SwiftUI
+uses to host the app. Six cold launches without it: 25, 19, 18, 26, 21,
+22 seconds, none hung. The quick action goes through the app delegate's
+own `performActionFor` now, which UIKit calls when the scene delegate does
+not take it. The boot-first change stays; it was right for the runner and
+wrong about the cause.

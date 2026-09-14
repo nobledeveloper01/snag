@@ -4,6 +4,7 @@ import SnagDomain
 
 struct NewReportSheet: View {
     @Bindable var store: ReportStore
+    var start: ((ReportStore.Draft) -> Void)? = nil
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var scheme
     @State private var address = ""
@@ -69,8 +70,9 @@ struct NewReportSheet: View {
             .pinned {
                 VStack(spacing: Gap.s) {
                     Button(Strings.startWalk) {
-                        store.newDraft(kind: kind, address: address.trimmingCharacters(in: .whitespaces), now: Clock.now(), template: template, movedIn: kind == .moveOut ? movedIn : nil)
+                        let draft = store.newDraft(kind: kind, address: address.trimmingCharacters(in: .whitespaces), now: Clock.now(), template: template, movedIn: kind == .moveOut ? movedIn : nil)
                         dismiss()
+                        start?(draft)
                     }
                     .buttonStyle(Primary(palette: palette))
                     .disabled(address.trimmingCharacters(in: .whitespaces).isEmpty)

@@ -33,6 +33,9 @@ final class DepthUITests: XCTestCase {
         XCTAssertTrue(field.waitForExistence(timeout: 3))
         type(address, into: field, in: app)
         app.buttons["Walk the flat"].tap()
+        // Walk the flat walks: the draft opens. Back to the list for the next one.
+        XCTAssertTrue(app.buttons["Add a room"].waitForExistence(timeout: 3))
+        app.navigationBars.buttons.firstMatch.tap()
         XCTAssertTrue(app.staticTexts[address].waitForExistence(timeout: 3))
     }
 

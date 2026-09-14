@@ -176,7 +176,7 @@ struct RoomNameSheet: View {
 }
 
 extension Room {
-    var title: String { name == .other ? (custom ?? Strings.room) : name.word.capitalized }
+    var title: String { name == .other ? (custom ?? Strings.room) : name.word.sentenceCased }
 }
 
 /// The chip that follows every number and every room: photographed,

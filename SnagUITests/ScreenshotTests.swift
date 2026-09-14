@@ -28,7 +28,6 @@ final class ScreenshotTests: XCTestCase {
         type("14 Admiralty Way, Lekki", into: app.textViews["address"], in: app)
         app.buttons["Walk the flat"].tap()
         XCTAssertTrue(app.staticTexts["14 Admiralty Way, Lekki"].waitForExistence(timeout: 3))
-        app.staticTexts["14 Admiralty Way, Lekki"].firstMatch.tap()
         XCTAssertTrue(app.navigationBars["7 rooms"].waitForExistence(timeout: 3))
         shot(app, "03-walk")
         app.staticTexts["Kitchen"].firstMatch.tap()

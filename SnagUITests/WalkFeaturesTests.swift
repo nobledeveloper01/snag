@@ -60,7 +60,6 @@ final class WalkFeaturesTests: XCTestCase {
         type("3 Glover Road", into: address, in: app)
         app.buttons["Walk the flat"].tap()
         XCTAssertTrue(app.staticTexts["3 Glover Road"].waitForExistence(timeout: 3))
-        app.staticTexts["3 Glover Road"].firstMatch.tap()
         XCTAssertTrue(app.navigationBars["7 rooms"].waitForExistence(timeout: 3), "the two-bedroom template names seven rooms")
     }
 

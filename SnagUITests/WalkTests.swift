@@ -41,7 +41,6 @@ final class WalkTests: XCTestCase {
             type("14 Admiralty Way", into: address, in: app)
             app.buttons["Walk the flat"].tap()
             XCTAssertTrue(app.staticTexts["14 Admiralty Way"].waitForExistence(timeout: 3))
-            app.staticTexts["14 Admiralty Way"].firstMatch.tap()
             XCTAssertTrue(app.buttons["Add a room"].waitForExistence(timeout: 3))
             try audit(app, "walk empty \(size)")
             app.buttons["Add a room"].tap()

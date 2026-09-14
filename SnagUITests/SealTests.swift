@@ -68,7 +68,6 @@ final class SealTests: XCTestCase {
         type("7 Bourdillon Road", into: address, in: app)
         app.buttons["Walk the flat"].tap()
         XCTAssertTrue(app.staticTexts["7 Bourdillon Road"].waitForExistence(timeout: 3))
-        app.staticTexts["7 Bourdillon Road"].firstMatch.tap()
         XCTAssertTrue(app.buttons["Add a room"].waitForExistence(timeout: 3))
         XCTAssertFalse(app.buttons["Review"].exists, "nothing to review before a photograph")
         // Two rooms, six items: the shape the roadmap's exit gate names.

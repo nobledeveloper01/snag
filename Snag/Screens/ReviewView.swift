@@ -23,9 +23,9 @@ struct ReviewView: View {
                         .font(Type.secondaryFont()).foregroundStyle(palette.textSecondary)
                 }
                 Section {
-                    ForEach(Array(r.rooms.enumerated()), id: \.offset) { _, room in
+                    ForEach(Array(r.rooms.enumerated()), id: \.offset) { i, room in
                         HStack {
-                            Text(room.title).font(Type.bodyFont()).foregroundStyle(palette.textPrimary)
+                            Text(r.roomLabels[i].sentenceCased).font(Type.bodyFont()).foregroundStyle(palette.textPrimary)
                             Spacer()
                             Text("\(room.items.filter { $0.state == .snag }.count) \(Strings.snags)").font(Type.secondaryFont()).foregroundStyle(palette.textSecondary)
                             TierChip(tier: room.tier, palette: palette)

@@ -108,7 +108,8 @@ struct ReportsListView: View {
                     if let s = store.sealed.first(where: { $0.id == id }) { SealedView(store: store, sealed: s) }
                 }
             }
-            .sheet(isPresented: $creating) { NewReportSheet(store: store) }
+            // "Walk the flat" walks: the sheet closes and the walk opens.
+            .sheet(isPresented: $creating) { NewReportSheet(store: store) { draft in path = [.draft(draft.id)] } }
             .sheet(isPresented: $checking) { CheckPaperView(store: store) }
             .sheet(isPresented: $settings) { SettingsView(store: store) }
             .sheet(item: $opened) { url in VerifyView(url: url, store: store) }
