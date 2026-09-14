@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		A10000000000000000000001 /* SnagDomain in Frameworks */ = {isa = PBXBuildFile; productRef = A50000000000000000000001 /* SnagDomain */; };
 		A10000000000000000000002 /* SnagDomain in Frameworks */ = {isa = PBXBuildFile; productRef = A50000000000000000000002 /* SnagDomain */; };
+		A10000000000000000000003 /* SnagWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = A30000000000000000000004 /* SnagWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -26,18 +27,42 @@
 			remoteGlobalIDString = A70000000000000000000001;
 			remoteInfo = Snag;
 		};
+		A20000000000000000000003 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A90000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A70000000000000000000004;
+			remoteInfo = SnagWidgets;
+		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		AF0000000000000000000001 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				A10000000000000000000003 /* SnagWidgets.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		A30000000000000000000001 /* Snag.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Snag.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A30000000000000000000002 /* SnagTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SnagTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		A30000000000000000000003 /* SnagUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SnagUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		A30000000000000000000004 /* SnagWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SnagWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		A40000000000000000000001 /* Snag */ = {isa = PBXFileSystemSynchronizedRootGroup; path = Snag; sourceTree = "<group>"; };
 		A40000000000000000000002 /* SnagTests */ = {isa = PBXFileSystemSynchronizedRootGroup; path = SnagTests; sourceTree = "<group>"; };
 		A40000000000000000000003 /* SnagUITests */ = {isa = PBXFileSystemSynchronizedRootGroup; path = SnagUITests; sourceTree = "<group>"; };
+		A40000000000000000000004 /* SnagWidgets */ = {isa = PBXFileSystemSynchronizedRootGroup; path = SnagWidgets; sourceTree = "<group>"; };
+		A40000000000000000000005 /* SnagShared */ = {isa = PBXFileSystemSynchronizedRootGroup; path = SnagShared; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -64,6 +89,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A60000000000000000000004 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -73,6 +105,8 @@
 				A40000000000000000000001 /* Snag */,
 				A40000000000000000000002 /* SnagTests */,
 				A40000000000000000000003 /* SnagUITests */,
+				A40000000000000000000004 /* SnagWidgets */,
+				A40000000000000000000005 /* SnagShared */,
 				A80000000000000000000002 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -83,6 +117,7 @@
 				A30000000000000000000001 /* Snag.app */,
 				A30000000000000000000002 /* SnagTests.xctest */,
 				A30000000000000000000003 /* SnagUITests.xctest */,
+				A30000000000000000000004 /* SnagWidgets.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -97,13 +132,16 @@
 				AA0000000000000000000001 /* Sources */,
 				A60000000000000000000001 /* Frameworks */,
 				AB0000000000000000000001 /* Resources */,
+				AF0000000000000000000001 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				AD0000000000000000000003 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				A40000000000000000000001 /* Snag */,
+				A40000000000000000000005 /* SnagShared */,
 			);
 			name = Snag;
 			packageProductDependencies = (
@@ -160,6 +198,29 @@
 			productReference = A30000000000000000000003 /* SnagUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
+		A70000000000000000000004 /* SnagWidgets */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AC0000000000000000000005 /* Build configuration list for PBXNativeTarget "SnagWidgets" */;
+			buildPhases = (
+				AA0000000000000000000004 /* Sources */,
+				A60000000000000000000004 /* Frameworks */,
+				AB0000000000000000000004 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				A40000000000000000000004 /* SnagWidgets */,
+				A40000000000000000000005 /* SnagShared */,
+			);
+			name = SnagWidgets;
+			packageProductDependencies = (
+			);
+			productName = SnagWidgets;
+			productReference = A30000000000000000000004 /* SnagWidgets.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -198,6 +259,7 @@
 				A70000000000000000000001 /* Snag */,
 				A70000000000000000000002 /* SnagTests */,
 				A70000000000000000000003 /* SnagUITests */,
+				A70000000000000000000004 /* SnagWidgets */,
 			);
 		};
 /* End PBXProject section */
@@ -218,6 +280,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		AB0000000000000000000003 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AB0000000000000000000004 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -248,6 +317,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		AA0000000000000000000004 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -260,6 +336,11 @@
 			isa = PBXTargetDependency;
 			target = A70000000000000000000001 /* Snag */;
 			targetProxy = A20000000000000000000002 /* PBXContainerItemProxy */;
+		};
+		AD0000000000000000000003 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A70000000000000000000004 /* SnagWidgets */;
+			targetProxy = A20000000000000000000003 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -435,6 +516,50 @@
 			};
 			name = Release;
 		};
+		B00000000000000000000009 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Config/Widgets-Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = ng.snag.app.widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		B00000000000000000000010 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Config/Widgets-Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = ng.snag.app.widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -470,6 +595,15 @@
 			buildConfigurations = (
 				B00000000000000000000007 /* Debug */,
 				B00000000000000000000008 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AC0000000000000000000005 /* Build configuration list for PBXNativeTarget "SnagWidgets" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B00000000000000000000009 /* Debug */,
+				B00000000000000000000010 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

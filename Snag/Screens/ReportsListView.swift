@@ -8,6 +8,9 @@ struct ReportsListView: View {
     @Environment(\.colorScheme) private var scheme
     @State private var creating = false
     @State private var checking = false
+    @State private var settings = false
+    @State private var query = ""
+    @State private var launch = Launch.shared
     @State private var path: [Route] = []
     @State private var opened: URL?
 
@@ -29,19 +32,33 @@ struct ReportsListView: View {
                         .frame(maxWidth: .infinity)
                     }
                 } else {
+                    let drafts = store.drafts.filter { matches($0.report) }.sorted { $0.report.createdAt > $1.report.createdAt }
+                    let sealed = store.sealed.filter { matches($0.report) }.sorted { $0.report.createdAt > $1.report.createdAt }
                     List {
-                        if !store.drafts.isEmpty {
+                        // An agent with five flats finds one by its address.
+                        if store.drafts.count + store.sealed.count > 2 {
                             Section {
-                                ForEach(store.drafts) { draft in
+                                TextField(Strings.search, text: $query).font(Type.bodyFont())
+                                    .textInputAutocapitalization(.words).autocorrectionDisabled()
+                                    .frame(minHeight: Target.standard)
+                                    .accessibilityLabel(Strings.search).accessibilityIdentifier("search")
+                            }
+                        }
+                        if !drafts.isEmpty {
+                            Section {
+                                ForEach(drafts) { draft in
                                     NavigationLink(value: Route.draft(draft.id)) { row(draft.report, palette) }
+                                        .swipeActions(edge: .trailing) {
+                                            Button(role: .destructive) { store.delete(draft: draft) } label: { Label(Strings.delete, systemImage: "trash") }
+                                        }
                                 }
                             } header: {
                                 Text(Strings.inProgress).font(Type.secondaryFont()).foregroundStyle(palette.textSecondary)
                             }
                         }
-                        if !store.sealed.isEmpty {
+                        if !sealed.isEmpty {
                             Section {
-                                ForEach(store.sealed) { s in
+                                ForEach(sealed) { s in
                                     NavigationLink(value: Route.sealed(s.id)) { row(s.report, palette) }
                                 }
                             } header: {
@@ -50,16 +67,18 @@ struct ReportsListView: View {
                         }
                     }
                     .scrollContentBackground(.hidden)
-                .listRoom()
-            .listRoom()
+                    .listRoom()
                 }
             }
             .pinned {
                 VStack(spacing: Gap.s) {
                     Button(Strings.newReport) { creating = true }
                         .buttonStyle(Primary(palette: palette))
-                    if !store.sealed.isEmpty {
-                        Button(Strings.checkPaper) { checking = true }.buttonStyle(Secondary(palette: palette))
+                    HStack(spacing: Gap.s) {
+                        if !store.sealed.isEmpty {
+                            Button(Strings.checkPaper) { checking = true }.buttonStyle(Secondary(palette: palette))
+                        }
+                        Button(Strings.settings) { settings = true }.buttonStyle(Secondary(palette: palette))
                     }
                 }
                 .padding(Gap.l)
@@ -75,10 +94,15 @@ struct ReportsListView: View {
             }
             .sheet(isPresented: $creating) { NewReportSheet(store: store) }
             .sheet(isPresented: $checking) { CheckPaperView(store: store) }
-            .sheet(item: $opened) { url in VerifyView(url: url) }
+            .sheet(isPresented: $settings) { SettingsView(store: store) }
+            .sheet(item: $opened) { url in VerifyView(url: url, store: store) }
         }
         .tint(palette.accent)
-        .onOpenURL { url in opened = url }
+        .onOpenURL { url in
+            // snag://new from the quick action; anything else is a bundle.
+            if url.scheme == "snag" { creating = true } else { opened = url }
+        }
+        .onChange(of: launch.wantsNewReport) { _, wants in if wants { creating = true; launch.wantsNewReport = false } }
         .onAppear {
             // A draft survives a kill: the walk resumes in the room it was in.
             if path.isEmpty, let r = store.resume, let d = store.drafts.first(where: { $0.id == r.draft }), r.room < d.report.rooms.count {
@@ -88,7 +112,14 @@ struct ReportsListView: View {
             // the share sheet, which the simulator cannot deliver.
             if CommandLine.arguments.contains("-openLatest"), let s = store.sealed.last { opened = s.url }
             if CommandLine.arguments.contains("-scanLatest") { checking = true }
+            if CommandLine.arguments.contains("-newReport") { Launch.shared.wantsNewReport = true }
+            if launch.wantsNewReport { creating = true; launch.wantsNewReport = false }
         }
+    }
+
+    private func matches(_ report: Report) -> Bool {
+        let q = query.trimmingCharacters(in: .whitespaces)
+        return q.isEmpty || report.address.localizedCaseInsensitiveContains(q)
     }
 
     private func row(_ report: Report, _ palette: Palette) -> some View {

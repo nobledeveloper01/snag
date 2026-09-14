@@ -13,6 +13,9 @@ enum SnagBundle {
     static let photosDir = "photos"
     static let counterFile = "countersign.bin"
     static let counterSigFile = "countersign.sig"
+    /// The drawn signature, as a picture, named in the counter-signature by
+    /// its hash the way a photograph is named in the report.
+    static let signatureImage = "signature.jpg"
     /// The bundle as one file: the same files, zipped, stored. WhatsApp
     /// carries a file and not a folder.
     static let zipExtension = "snagz"
@@ -43,7 +46,8 @@ enum SnagBundle {
         return url
     }
 
-    static func writeCounterSignature(_ bytes: [UInt8], seal: Seal, to dir: URL) throws {
+    static func writeCounterSignature(_ bytes: [UInt8], seal: Seal, signature image: Data, to dir: URL) throws {
+        try image.write(to: dir.appendingPathComponent(signatureImage))
         try Data(bytes).write(to: dir.appendingPathComponent(counterFile))
         try Data(seal.signature).write(to: dir.appendingPathComponent(counterSigFile))
     }

@@ -6,6 +6,7 @@ import SnagDomain
 
 struct VerifyView: View {
     let url: URL
+    var store: ReportStore? = nil
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var scheme
     @State private var verdict: Verdict?
@@ -25,6 +26,11 @@ struct VerifyView: View {
                         if let counter {
                             Text("\(Strings.counterSigned) \(counter.name), \(Dates.short(counter.signedAt))").font(Type.secondaryFont()).foregroundStyle(palette.textSecondary)
                         }
+                    }
+                    // Compare two bundles: the opened move-out against the
+                    // move-in this phone holds — on any phone that holds it.
+                    if let movedIn = store?.movedIn(for: r) {
+                        ChangesSection(lines: Changes.lines(movedIn: movedIn.report, movedOut: r), palette: palette)
                     }
                     Section {
                         NavigationLink {

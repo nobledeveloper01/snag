@@ -60,6 +60,7 @@ struct ReviewView: View {
         do {
             let sealed = try store.seal(draft, with: try Sealer())
             Haptics.sealed()
+            WalkActivity.end()
             dismiss()
             path = [.sealed(sealed.id)]
         } catch {

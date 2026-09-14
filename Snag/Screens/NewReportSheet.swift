@@ -9,6 +9,7 @@ struct NewReportSheet: View {
     @State private var address = ""
     @State private var kind: Kind = .moveIn
     @State private var template: RoomTemplate? = .oneBed
+    @State private var movedIn: ReportStore.Sealed?
 
     var body: some View {
         let palette = Palette.current(scheme)
@@ -27,8 +28,6 @@ struct NewReportSheet: View {
                     TextEditor(text: $address)
                         .font(Type.bodyFont())
                         .scrollContentBackground(.hidden)
-                .listRoom()
-            .listRoom()
                         .frame(minHeight: Target.standard)
                         .accessibilityLabel(Strings.address).accessibilityIdentifier("address")
                 }
@@ -38,9 +37,22 @@ struct NewReportSheet: View {
                     Text(Strings.moveOut).tag(Kind.moveOut)
                 }
                 .pickerStyle(.inline).font(Type.bodyFont())
+                // A move-out linked to a move-in starts with the move-in's rooms
+                // and can shoot the same views; the link goes in the report.
+                if kind == .moveOut, !store.sealed.filter({ $0.report.kind == .moveIn }).isEmpty {
+                    Section {
+                        ForEach(store.sealed.filter { $0.report.kind == .moveIn }) { s in
+                            TemplateRow(title: s.report.address, detail: Dates.short(s.report.createdAt), selected: movedIn?.id == s.id, palette: palette) { movedIn = s }
+                        }
+                        TemplateRow(title: Strings.noLink, detail: nil, selected: movedIn == nil, palette: palette) { movedIn = nil }
+                    } header: {
+                        Text(Strings.linkMoveIn).font(Type.secondaryFont()).foregroundStyle(palette.textSecondary)
+                    }
+                }
                 // The flat's shape names the rooms before the walk starts; the
                 // tenant adds or removes from there. Owned rows, not a picker:
                 // a picker's value text does not scale.
+                if movedIn == nil {
                 Section {
                     ForEach(RoomTemplate.allCases, id: \.self) { t in
                         TemplateRow(title: t.word.sentenceCased, detail: "\(t.rooms.count) \(Strings.room.lowercased())s", selected: template == t, palette: palette) { template = t }
@@ -49,6 +61,7 @@ struct NewReportSheet: View {
                 } header: {
                     Text(Strings.startWith).font(Type.secondaryFont()).foregroundStyle(palette.textSecondary)
                 }
+                }
             }
             .scrollContentBackground(.hidden)
             .listRoom()
@@ -56,7 +69,7 @@ struct NewReportSheet: View {
             .pinned {
                 VStack(spacing: Gap.s) {
                     Button(Strings.startWalk) {
-                        store.newDraft(kind: kind, address: address.trimmingCharacters(in: .whitespaces), now: Clock.now(), template: template)
+                        store.newDraft(kind: kind, address: address.trimmingCharacters(in: .whitespaces), now: Clock.now(), template: template, movedIn: kind == .moveOut ? movedIn : nil)
                         dismiss()
                     }
                     .buttonStyle(Primary(palette: palette))
@@ -75,6 +88,7 @@ struct NewReportSheet: View {
                 .padding(Gap.l)
             }
             .navigationTitle(Strings.newReport)
+            .onChange(of: movedIn) { _, new in if let new, address.trimmingCharacters(in: .whitespaces).isEmpty { address = new.report.address } }
         }
         .tint(palette.accent)
     }

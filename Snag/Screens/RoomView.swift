@@ -50,7 +50,6 @@ struct RoomView: View {
                 }
                 .scrollContentBackground(.hidden)
                 .listRoom()
-            .listRoom()
             }
         }
         .pinned {
@@ -68,6 +67,37 @@ struct RoomView: View {
                     .background(palette.raised, in: RoundedRectangle(cornerRadius: Radius.card))
                     .padding(.horizontal, Gap.l)
                     .accessibilityIdentifier("duplicate")
+                }
+                // Shoot the same view: on a move-out walk, the move-in's
+                // photographs of this room, each a tap away from its retake.
+                if let draft, let movedIn = store.movedIn(for: draft.report), roomIndex < movedIn.report.rooms.count,
+                   !movedIn.report.rooms[roomIndex].items.isEmpty {
+                    Text(Strings.atMoveIn).font(Type.smallFont()).foregroundStyle(palette.textSecondary).padding(.horizontal, Gap.l)
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: Gap.s) {
+                            ForEach(Array(movedIn.report.rooms[roomIndex].items.enumerated()), id: \.offset) { _, item in
+                                Button {
+                                    Task { await shoot(prompt: item.caption.isEmpty ? Strings.sameView : item.caption) }
+                                } label: {
+                                    HStack(spacing: Gap.s) {
+                                        Group {
+                                            if let img = UIImage(contentsOfFile: SnagBundle.photoURL(in: movedIn.url, hash: item.photoHash).path) {
+                                                Image(uiImage: img).resizable().scaledToFill()
+                                            } else { palette.high }
+                                        }
+                                        .frame(width: 48, height: 48).clipShape(RoundedRectangle(cornerRadius: Radius.chip))
+                                        .accessibilityHidden(true)
+                                        Text(item.caption.isEmpty ? Strings.sameView : item.caption).font(Type.secondaryFont()).foregroundStyle(palette.textPrimary).lineLimit(2)
+                                    }
+                                    .padding(.trailing, Gap.m)
+                                }
+                                .buttonStyle(Chip(palette: palette))
+                                .disabled(busy)
+                            }
+                        }
+                        .padding(.horizontal, Gap.l)
+                    }
+                    .accessibilityIdentifier("moveInViews")
                 }
                 // The prompts: one tap photographs with the caption started.
                 // A strip, scrolled sideways, above the shutter.
@@ -296,8 +326,6 @@ struct ItemSheet: View {
                     TextEditor(text: $caption)
                         .font(Type.bodyFont())
                         .scrollContentBackground(.hidden)
-                .listRoom()
-            .listRoom()
                         .frame(minHeight: Target.standard)
                         .padding(Gap.s)
                         .background(palette.raised, in: RoundedRectangle(cornerRadius: Radius.tile))

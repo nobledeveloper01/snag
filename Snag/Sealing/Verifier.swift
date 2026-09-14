@@ -67,6 +67,9 @@ enum Verifier {
                   key.isValidSignature(cSig, for: SHA256.hash(data: cData)) else { return .altered("counter-signature") }
             guard let c = try? Canonical.counterSignature(from: Array(cData)) else { return .altered("counter-signature decoding") }
             guard c.reportId == Array(digest) else { return .altered("counter-signature is for another report") }
+            // The drawn signature is bound the way a photograph is: present, and hashing to its name.
+            guard let image = try? Data(contentsOf: dir.appendingPathComponent(SnagBundle.signatureImage)) else { return .altered("signature image missing") }
+            guard SnagBundle.sha256(image) == c.signatureHash else { return .altered("signature image") }
             counter = c
         }
         return .unaltered(report, counter)

@@ -54,7 +54,6 @@ struct WalkView: View {
                 }
                 .scrollContentBackground(.hidden)
                 .listRoom()
-            .listRoom()
                 .environment(\.editMode, .constant(reordering ? .active : .inactive))
             }
         }
@@ -76,7 +75,12 @@ struct WalkView: View {
             .padding(Gap.l)
         }
         .navigationTitle(draft.map { "\($0.report.rooms.count) \(Strings.room.lowercased())s" } ?? Strings.room)
-        .onAppear { if store.resume?.draft == draftId { store.resume = nil } }
+        .onAppear {
+            if store.resume?.draft == draftId { store.resume = nil }
+            if let draft { WalkActivity.show(draft.report) }
+        }
+        .onChange(of: draft?.report) { _, r in if let r { WalkActivity.show(r) } }
+        .onDisappear { if path.isEmpty { WalkActivity.end() } }
         .sheet(isPresented: $adding) {
             RoomNameSheet(title: Strings.addRoom, initial: .livingRoom, initialCustom: "") { name, custom in
                 guard var d = draft else { return }

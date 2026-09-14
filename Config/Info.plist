@@ -14,6 +14,8 @@
 	<key>LSRequiresIPhoneOS</key><true/>
 	<key>NSCameraUsageDescription</key>
 	<string>Snag uses the camera to photograph the condition of each room. Photographs stay on this phone.</string>
+	<key>NSCalendarsWriteOnlyAccessUsageDescription</key>
+	<string>Snag adds one note to your calendar for the day the tenancy ends, so the move-out walk happens before the keys go back. It reads nothing.</string>
 	<key>UIAppFonts</key>
 	<array><string>InterVariable.ttf</string></array>
 	<!-- Painted the same colour as the splash so there is no white flash on handover. -->
@@ -36,15 +38,35 @@
 		<key>UTTypeDescription</key><string>Snag sealed report, one file</string>
 		<key>UTTypeConformsTo</key><array><string>com.pkware.zip-archive</string></array>
 		<key>UTTypeTagSpecification</key><dict><key>public.filename-extension</key><array><string>snagz</string></array></dict>
+	</dict><dict>
+		<key>UTTypeIdentifier</key><string>ng.snag.backup</string>
+		<key>UTTypeDescription</key><string>Snag backup</string>
+		<key>UTTypeConformsTo</key><array><string>com.pkware.zip-archive</string></array>
+		<key>UTTypeTagSpecification</key><dict><key>public.filename-extension</key><array><string>snagbackup</string></array></dict>
 	</dict></array>
 	<key>CFBundleDocumentTypes</key>
 	<array><dict>
 		<key>CFBundleTypeName</key><string>Snag sealed report</string>
-		<key>LSItemContentTypes</key><array><string>ng.snag.report</string><string>ng.snag.report-file</string></array>
+		<key>LSItemContentTypes</key><array><string>ng.snag.report</string><string>ng.snag.report-file</string><string>ng.snag.backup</string></array>
 		<key>LSHandlerRank</key><string>Owner</string>
 		<key>LSTypeIsPackage</key><true/>
 	</dict></array>
 	<key>LSSupportsOpeningDocumentsInPlace</key><false/>
+	<key>NSSupportsLiveActivities</key><true/>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Snag can lock itself with Face ID, if you turn that on. It stores nothing about your face.</string>
+	<!-- snag://new: the Home Screen quick action and Shortcuts open the new-report sheet. -->
+	<key>CFBundleURLTypes</key>
+	<array><dict>
+		<key>CFBundleURLName</key><string>ng.snag.app</string>
+		<key>CFBundleURLSchemes</key><array><string>snag</string></array>
+	</dict></array>
+	<key>UIApplicationShortcutItems</key>
+	<array><dict>
+		<key>UIApplicationShortcutItemType</key><string>ng.snag.new</string>
+		<key>UIApplicationShortcutItemTitle</key><string>New report</string>
+		<key>UIApplicationShortcutItemIconSymbolName</key><string>camera.fill</string>
+	</dict></array>
 	<key>UIApplicationSceneManifest</key>
 	<dict><key>UIApplicationSupportsMultipleScenes</key><false/></dict>
 </dict>

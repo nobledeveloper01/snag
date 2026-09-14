@@ -18,6 +18,8 @@ final class ReportStore {
         let id: String            // the report id: hex of the digest
         let url: URL
         let report: Report
+        var counter: CounterSignature?
+        var idBytes: [UInt8] { stride(from: 0, to: id.count, by: 2).compactMap { i in UInt8(id[id.index(id.startIndex, offsetBy: i)..<id.index(id.startIndex, offsetBy: i + 2)], radix: 16) } }
     }
 
     /// Where the walk was when the app went away: a draft and a room. Set
@@ -59,7 +61,8 @@ final class ReportStore {
             guard name.hasSuffix(".snag"),
                   let data = try? Data(contentsOf: url.appendingPathComponent(SnagBundle.reportFile)),
                   let r = try? Canonical.report(from: Array(data)) else { return nil }
-            return Sealed(id: String(name.dropLast(5)), url: url, report: r)
+            let counter = (try? Data(contentsOf: url.appendingPathComponent(SnagBundle.counterFile))).flatMap { try? Canonical.counterSignature(from: Array($0)) }
+            return Sealed(id: String(name.dropLast(5)), url: url, report: r, counter: counter)
         }
     }
 
@@ -69,13 +72,16 @@ final class ReportStore {
     }
 
     @discardableResult
-    func newDraft(kind: Kind, address: String, now: Int64, template: RoomTemplate? = nil) -> Draft {
+    /// A move-out linked to a move-in starts with the move-in's rooms, in
+    /// its order, empty — so the same view can be shot in each.
+    func newDraft(kind: Kind, address: String, now: Int64, template: RoomTemplate? = nil, movedIn: Sealed? = nil) -> Draft {
         let id = String(format: "%013d", now) + "-" + String(UInt32.random(in: 0...UInt32.max), radix: 36)
-        let rooms = (template?.rooms ?? []).map { Room(name: $0) }
-        let d = Draft(id: id, report: Report(kind: kind, address: address, createdAt: now, rooms: rooms))
+        let rooms = movedIn.map { $0.report.rooms.map { Room(name: $0.name, custom: $0.custom) } } ?? (template?.rooms ?? []).map { Room(name: $0) }
+        let d = Draft(id: id, report: Report(kind: kind, address: address, createdAt: now, movedInReportId: movedIn?.idBytes, rooms: rooms))
         try? FileManager.default.createDirectory(at: draftDir(id).appendingPathComponent("photos"), withIntermediateDirectories: true)
         drafts.append(d)
         save(d)
+        Task { await SealNudge.schedule(draft: id, address: address) }
         return d
     }
 
@@ -112,14 +118,34 @@ final class ReportStore {
         try? FileManager.default.removeItem(at: draftDir(draft.id))
         drafts.removeAll { $0.id == draft.id }
         if resume?.draft == draft.id { resume = nil }
+        SealNudge.cancel(draft: draft.id)
         let s = Sealed(id: seal.id, url: url, report: draft.report)
         sealed.append(s)
         return s
     }
 
+    /// The sealed move-in a report points at, if it is on this phone.
+    func movedIn(for report: Report) -> Sealed? {
+        guard let id = report.movedInReportId else { return nil }
+        return sealed.first { $0.idBytes == id }
+    }
+
+    /// The other party's signature, as the second layer the format has:
+    /// name, phone, the drawn signature as a picture, signed with the same key.
+    func counterSign(_ s: Sealed, name: String, phone: String, signature image: Data, with sealer: Sealer, now: Int64) throws -> Sealed {
+        let c = CounterSignature(reportId: s.idBytes, name: name, phone: phone, signatureHash: SnagBundle.sha256(image), signedAt: now)
+        let bytes = try Canonical.bytes(of: c)
+        try SnagBundle.writeCounterSignature(bytes, seal: try sealer.seal(bytes), signature: image, to: s.url)
+        var updated = s
+        updated.counter = c
+        if let i = sealed.firstIndex(where: { $0.id == s.id }) { sealed[i] = updated }
+        return updated
+    }
+
     func delete(draft d: Draft) {
         try? FileManager.default.removeItem(at: draftDir(d.id))
         drafts.removeAll { $0.id == d.id }
+        SealNudge.cancel(draft: d.id)
         if resume?.draft == d.id { resume = nil }
     }
 

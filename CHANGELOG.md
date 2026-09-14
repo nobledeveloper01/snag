@@ -31,6 +31,15 @@ Entries say *why*, not just what.
   *Check a paper copy*, the one-file `.snagz` bundle with its own zip
   reader and writer, the share message, and a second verifier in Python
   gated by `make verify-check` against the app's own sealed fixture.
+- **The thirty, parts two and three — the handover and the agent.** Built
+  ahead of their phases, because Phases 2 and 3 wait on handsets and none
+  of these needs one: the counter-signature drawn on glass and bound into
+  the bundle as `signature.jpg` (both verifiers check it; the fixture was
+  re-sealed), the move-out linked to its move-in with the same views beside
+  the shutter and a diff page in the app and the PDF, two bundles compared
+  on any phone, the calendar entry for the day the tenancy ends, search by
+  address, the app lock, the seal nudge, backup and restore, Siri and the
+  quick action, and the walk as a Live Activity from a new widget extension.
 - `design-check` now fails on any font that is not relative to a text
   style, and the UI tests no longer ask the audit about Dynamic Type, which
   it measured wrongly for rows near the bottom of a list.

@@ -166,3 +166,49 @@ Quarters". A four-line `sentenceCased`.
 constants, a DER parser, the decoder from the format document, and the
 app's own sealed bundle read *unaltered* on the first run. The gate hands
 it five tampers every run so that agreement is never the only evidence.
+
+## 2026-09-14, before dawn — the thirty, parts two and three
+
+Twelve more, from the handover and the agent's phone, built ahead of their
+phases because none needs a handset and the two phases before them do. The
+counter-signature first, and it changed the format: the drawn signature is
+a picture, and a picture in a bundle is bound by its hash, so `signature.jpg`
+sits beside the layer and both verifiers check it — the fixture was
+re-sealed and the gate gained a tamper. Then the move-out: linked to its
+move-in through the field the encoding always had, starting with the
+move-in's rooms, the old photographs beside the shutter, the diff on the
+sealed screen and on a page of the PDF, and the same diff for a bundle
+opened on another phone. The calendar entry, the search row, the lock, the
+nudge, the backup, Siri, and the Live Activity, which needed the first
+second target in the hand-written project file — a widget extension and a
+folder shared by two targets, which the synchronised-group format allows.
+
+Thirty-seven app tests, twenty domain tests, `make ci` green.
+
+### What surprised us
+
+**The simulator has a passcode.** Device-owner authentication does not
+fail on it; it puts up a passcode sheet of its own. The test cancels the
+sheet and reads *Not unlocked. Try again.* — which is the honest screen a
+tenant with a locked app and a forgotten passcode would see.
+
+**A signature under a keyboard is a scroll.** The pad sat below the phone
+field, the keyboard covered it, and the press-and-drag went to the
+keyboard. A *Done* over the keyboard, which the tenant needs too.
+
+**The audit reads a calendar grid as text it cannot reach.** The graphical
+date picker is the system's; its day numbers were flagged. Compact.
+
+**Two targets, one file name, one build.** The app's `WalkActivity.swift`
+and the shared `WalkActivity.swift` produced the same intermediate and the
+build refused. Renamed; a synchronised folder shared by two targets is
+otherwise as simple as listing it under both.
+
+**A test hook that writes a setting outlives the test.** `-lock` wrote
+`pref.lock` to the simulator's defaults so the locked screen could be
+looked at; the next launch without `-freshStore` was the unit-test host,
+which came up behind the simulator's passcode sheet, and xcodebuild
+reported "the test runner hung before establishing connection" — twice,
+only under `make ci`, never under `make test-app`, because the order of
+launches differed. `-lock` is now an in-memory override, and a test host
+never locks. The simulator was erased to be sure.

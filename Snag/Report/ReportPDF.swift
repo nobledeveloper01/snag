@@ -17,9 +17,11 @@ enum ReportPDF {
     static let margin: CGFloat = 48
     static let footerHeight: CGFloat = 40
 
-    static func write(_ sealed: ReportStore.Sealed, publicKey: [UInt8]) throws -> URL {
+    static func write(_ sealed: ReportStore.Sealed, publicKey: [UInt8], movedIn: Report? = nil) throws -> URL {
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("Snag-\(sealed.id.prefix(12)).pdf")
-        try render(sealed.report, id: sealed.id, publicKey: publicKey, photos: { SnagBundle.photoURL(in: sealed.url, hash: $0) }).write(to: url)
+        let signature = sealed.counter.map { c in (c, UIImage(contentsOfFile: sealed.url.appendingPathComponent(SnagBundle.signatureImage).path)) }
+        try render(sealed.report, id: sealed.id, publicKey: publicKey, movedIn: movedIn, signature: signature,
+                   photos: { SnagBundle.photoURL(in: sealed.url, hash: $0) }).write(to: url)
         return url
     }
 
@@ -30,13 +32,13 @@ enum ReportPDF {
         "snag:1:\(id):\(SnagBundle.hex(Array(SnagBundle.sha256(Data(publicKey)).prefix(8))))"
     }
 
-    static func render(_ r: Report, id: String, publicKey: [UInt8], photos: (Hash) -> URL) -> Data {
+    static func render(_ r: Report, id: String, publicKey: [UInt8], movedIn: Report? = nil, signature: (CounterSignature, UIImage?)? = nil, photos: (Hash) -> URL) -> Data {
         // Two passes: the first counts pages so the second can print "of N".
-        let count = draw(r, id: id, publicKey: publicKey, photos: photos, total: nil).pages
-        return draw(r, id: id, publicKey: publicKey, photos: photos, total: count).data
+        let count = draw(r, id: id, publicKey: publicKey, movedIn: movedIn, signature: signature, photos: photos, total: nil).pages
+        return draw(r, id: id, publicKey: publicKey, movedIn: movedIn, signature: signature, photos: photos, total: count).data
     }
 
-    private static func draw(_ r: Report, id: String, publicKey: [UInt8], photos: (Hash) -> URL, total: Int?) -> (data: Data, pages: Int) {
+    private static func draw(_ r: Report, id: String, publicKey: [UInt8], movedIn: Report?, signature: (CounterSignature, UIImage?)?, photos: (Hash) -> URL, total: Int?) -> (data: Data, pages: Int) {
         let renderer = UIGraphicsPDFRenderer(bounds: page)
         var pages = 0
         let labels = r.roomLabels
@@ -113,6 +115,30 @@ enum ReportPDF {
                     col += 1
                     if col == 4 { col = 0; y += cell * 0.75 + 30 }
                 }
+            }
+            // --- Against the move-in, when that report is to hand
+            if let movedIn {
+                newPage()
+                y = margin
+                y = text(ReportText.sinceMoveIn, at: y, font: font(18, .bold))
+                y = text(ReportText.sinceMoveInHint, at: y, font: font(10), color: .darkGray)
+                for line in Changes.lines(movedIn: movedIn, movedOut: r) {
+                    if y > page.height - margin - footerHeight - 30 { newPage(); y = margin }
+                    y = text("\(line.room) · \(line.text) — \(line.word)", at: y + 2, font: font(11))
+                }
+            }
+            // --- The counter-signature, when there is one
+            if let (c, image) = signature {
+                newPage()
+                y = margin
+                y = text(ReportText.signaturePage, at: y, font: font(18, .bold))
+                y = text("\(ReportText.signedBy) \(c.name) · \(c.phone)", at: y + 6, font: font(12))
+                y = text("\(ReportText.signedAt) \(Dates.short(c.signedAt)), \(Strings.datedByPhone)", at: y, font: font(11), color: .darkGray)
+                let box = CGRect(x: margin, y: y + 12, width: 340, height: 160)
+                UIColor.lightGray.setStroke(); UIBezierPath(roundedRect: box, cornerRadius: 8).stroke()
+                if let image { image.draw(in: fit(image.size, in: box.insetBy(dx: 8, dy: 8))) }
+                y = box.maxY + 8
+                y = text(SnagBundle.hex(c.signatureHash), at: y, font: mono(8), color: .darkGray)
             }
             // --- The last page
             newPage()

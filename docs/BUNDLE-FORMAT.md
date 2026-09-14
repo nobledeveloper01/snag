@@ -14,7 +14,12 @@ app that made it, or a network.
     <sha256>.jpg    every photograph, named by the hex of its own SHA-256
   countersign.bin   (optional) canonical bytes of the counter-signature
   countersign.sig   (optional) ECDSA over SHA-256(countersign.bin), same key
+  signature.jpg     (with the above) the drawn signature; its SHA-256 is the
+                    counter-signature's signatureHash
 ```
+
+The same files travel as one file, `<id>.snagz`: a zip archive of the
+directory with the entries stored or deflated. A verifier accepts either.
 
 ## What the verifier checks
 
@@ -28,7 +33,8 @@ In this order, and the first failure is the answer:
    whose bytes hash to its name. A photograph in `photos/` that the report
    does not name is also a failure: a bundle carries nothing it did not sign.
 6. If `countersign.bin` is present, `countersign.sig` verifies over it with
-   the same key, it decodes, and its `reportId` equals `<id>`.
+   the same key, it decodes, its `reportId` equals `<id>`, and
+   `signature.jpg` is present and hashes to its `signatureHash`.
 
 Any failure after step 1 is *altered*. There is no third answer, because a
 partial verdict is an invitation to argue about which part.
@@ -44,6 +50,14 @@ changed after the seal. ADR-0003.
 
 The PDF is not part of the bundle and is not signed. It is a rendering of
 `report.bin` for people who read paper, and its last page says so.
+
+## A second verifier
+
+`scripts/verify.py` is this document, in Python, with P-256 written out
+from its constants and no dependencies. `make verify-check` runs it against
+a bundle the app sealed — `SnagTests/Fixtures/bundle-v1` — and against six
+tampers of it, every time. If the app and the script ever disagree, one of
+them has drifted from this page.
 
 ## The key
 

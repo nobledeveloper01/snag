@@ -137,6 +137,10 @@ lawyer has read the PDF and not asked for a change.*
 
 ### The thirty, part two — the handover
 
+*Built 2026-09-14, ahead of this phase, because none of the six needs a
+handset and Phases 2 and 3 do. The phase's exit gate — a real handover
+watched, a lawyer's reading — is untouched by that and still waits.*
+
 19. **The counter-signature, drawn.** Name, phone, a signature on glass,
     sealed as the second layer the format already has; a signature page in
     the PDF.
@@ -166,6 +170,9 @@ photographed to scanned with both signatures verifying, and the app in five
 languages.*
 
 ### The thirty, part three — the agent with five flats
+
+*Built 2026-09-14, ahead of this phase, for the same reason. The languages
+and the iCloud sync that make the phase are not among them.*
 
 25. **Find a report.** Search by address, sort by date, drafts and sealed apart.
 26. **The app lock.** Face ID or the passcode to open Snag; off by default.

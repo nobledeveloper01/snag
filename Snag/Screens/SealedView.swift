@@ -11,6 +11,13 @@ struct SealedView: View {
     @State private var verdict: Verdict?
     @State private var pdf: URL?
     @State private var zip: URL?
+    @State private var signing = false
+    @State private var reminding = false
+    @State private var current: ReportStore.Sealed
+
+    init(store: ReportStore, sealed: ReportStore.Sealed) {
+        self.store = store; self.sealed = sealed; _current = State(initialValue: sealed)
+    }
 
     var body: some View {
         let palette = Palette.current(scheme)
@@ -33,6 +40,22 @@ struct SealedView: View {
                     }
                     .frame(minHeight: Target.standard)
                     .accessibilityElement(children: .combine)
+                }
+                Section {
+                    // The handover: the other party signs here, once.
+                    if let c = current.counter {
+                        Text("\(Strings.counterSigned) \(c.name), \(Dates.short(c.signedAt))").font(Type.bodyFont()).foregroundStyle(palette.textPrimary)
+                            .frame(minHeight: Target.standard)
+                            .accessibilityIdentifier("counterSigned")
+                    } else {
+                        Button(Strings.counterSign) { signing = true }.buttonStyle(Secondary(palette: palette))
+                    }
+                    if r.kind == .moveIn {
+                        Button(Strings.remind) { reminding = true }.buttonStyle(Secondary(palette: palette))
+                    }
+                }
+                if let movedIn = store.movedIn(for: r) {
+                    ChangesSection(lines: Changes.lines(movedIn: movedIn.report, movedOut: r), palette: palette)
                 }
                 Section {
                     NavigationLink {
@@ -64,6 +87,14 @@ struct SealedView: View {
             .padding(Gap.l)
         }
         .navigationTitle(Strings.sealed)
+        .sheet(isPresented: $signing) {
+            CounterSignView(store: store, sealed: current) { updated in
+                current = updated
+                verdict = Verifier.verify(updated.url)
+                render()
+            }
+        }
+        .sheet(isPresented: $reminding) { RemindView(address: r.address) }
         .task {
             // `-tamper` flips one byte of the signed bytes before the verifier
             // runs. It exists so the UI test can see the word "Altered" on a
@@ -74,10 +105,14 @@ struct SealedView: View {
                 if var d = try? Data(contentsOf: f), !d.isEmpty { d[d.count - 1] ^= 0x01; try? d.write(to: f) }
             }
             verdict = Verifier.verify(sealed.url)
-            let key = (try? Data(contentsOf: sealed.url.appendingPathComponent(SnagBundle.keyFile))).map(Array.init) ?? []
-            pdf = try? ReportPDF.write(sealed, publicKey: key)
-            zip = try? SnagBundle.zip(sealed.url)
+            render()
         }
+    }
+
+    private func render() {
+        let key = (try? Data(contentsOf: sealed.url.appendingPathComponent(SnagBundle.keyFile))).map(Array.init) ?? []
+        pdf = try? ReportPDF.write(current, publicKey: key, movedIn: store.movedIn(for: current.report)?.report)
+        zip = try? SnagBundle.zip(sealed.url)
     }
 }
 

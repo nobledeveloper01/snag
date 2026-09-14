@@ -89,14 +89,19 @@ final class VerifierTests: XCTestCase {
         let (r, _) = try sealedBundle()
         let b = dir.appendingPathComponent("b.snag")
         let id = SnagBundle.sha256(Data(try Canonical.bytes(of: r)))
-        let c = CounterSignature(reportId: id, name: "Mr Okafor", phone: "+2348012345678", signatureHash: [UInt8](repeating: 7, count: 32), signedAt: 9)
+        let image = Data((0..<900).map { UInt8(truncatingIfNeeded: $0 * 5) })
+        let c = CounterSignature(reportId: id, name: "Mr Okafor", phone: "+2348012345678", signatureHash: SnagBundle.sha256(image), signedAt: 9)
         let cBytes = try Canonical.bytes(of: c)
-        try SnagBundle.writeCounterSignature(cBytes, seal: try sealer.seal(cBytes), to: b)
+        try SnagBundle.writeCounterSignature(cBytes, seal: try sealer.seal(cBytes), signature: image, to: b)
         guard case .unaltered(_, let counter) = Verifier.verify(b), counter == c else { return XCTFail("counter-signature did not verify") }
+        // The drawn signature swapped for another: altered.
+        try Data(image.reversed()).write(to: b.appendingPathComponent(SnagBundle.signatureImage))
+        guard case .altered("signature image") = Verifier.verify(b) else { return XCTFail("a swapped signature image was accepted") }
+        try image.write(to: b.appendingPathComponent(SnagBundle.signatureImage))
         // The same signed layer, pointed at a different report id: altered.
         let other = CounterSignature(reportId: [UInt8](repeating: 1, count: 32), name: c.name, phone: c.phone, signatureHash: c.signatureHash, signedAt: c.signedAt)
         let oBytes = try Canonical.bytes(of: other)
-        try SnagBundle.writeCounterSignature(oBytes, seal: try sealer.seal(oBytes), to: b)
+        try SnagBundle.writeCounterSignature(oBytes, seal: try sealer.seal(oBytes), signature: image, to: b)
         guard case .altered("counter-signature is for another report") = Verifier.verify(b) else { return XCTFail("a moved counter-signature was accepted") }
     }
 
@@ -112,9 +117,10 @@ final class VerifierTests: XCTestCase {
         let (r, _) = try sealedBundle()
         let b = dir.appendingPathComponent("b.snag")
         let id = SnagBundle.sha256(Data(try Canonical.bytes(of: r)))
-        let c = CounterSignature(reportId: id, name: "Mr T. Okafor", phone: "+2348012345678", signatureHash: [UInt8](repeating: 7, count: 32), signedAt: 1_789_003_600)
+        let image = Data((0..<900).map { UInt8(truncatingIfNeeded: $0 * 5) })
+        let c = CounterSignature(reportId: id, name: "Mr T. Okafor", phone: "+2348012345678", signatureHash: SnagBundle.sha256(image), signedAt: 1_789_003_600)
         let cBytes = try Canonical.bytes(of: c)
-        try SnagBundle.writeCounterSignature(cBytes, seal: try sealer.seal(cBytes), to: b)
+        try SnagBundle.writeCounterSignature(cBytes, seal: try sealer.seal(cBytes), signature: image, to: b)
         guard case .unaltered = Verifier.verify(b) else { return XCTFail("the fixture must verify before it is written") }
         try FileManager.default.copyItem(at: b, to: target)
     }

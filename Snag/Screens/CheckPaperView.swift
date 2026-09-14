@@ -59,8 +59,6 @@ struct CheckPaperView: View {
                         .font(Type.bodyFont())
                         .textInputAutocapitalization(.never).autocorrectionDisabled()
                         .scrollContentBackground(.hidden)
-                .listRoom()
-            .listRoom()
                         .frame(minHeight: Target.standard)
                         .accessibilityLabel(Strings.codeSays).accessibilityIdentifier("code")
                 }

@@ -103,6 +103,7 @@ final class SealTests: XCTestCase {
         XCTAssertTrue(app.buttons["Share PDF"].waitForExistence(timeout: 5), "the PDF rendered")
         XCTAssertTrue(app.buttons["Share sealed bundle"].exists)
         try audit(app, "sealed")
+        XCTAssertTrue(reveal(app.buttons["rooms"], in: app))
         app.buttons["rooms"].tap()
         XCTAssertTrue(app.staticTexts["Cracked tile by the sink"].waitForExistence(timeout: 3), "the sealed rooms are readable")
         XCTAssertEqual(app.staticTexts.matching(identifier: "photographed").count, 2, "both rooms carry their tier")

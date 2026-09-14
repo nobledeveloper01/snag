@@ -42,4 +42,16 @@ is in [`ROADMAP.md`](ROADMAP.md).
 | The QR on the cover, and *Check a paper copy* | The id and eight bytes of the key's hash; the camera or a typed line matches paper to a bundle on this phone. Never says the paper is true. |
 | One file | `<id>.snagz`, a stored zip written by forty lines of our own, because WhatsApp does not carry a folder. The reader also takes deflated entries, proved against a zip `zip -X` made. |
 | The share message carries the id | The words travel with the bytes: what it is, how to check it, which one it is. |
+| The counter-signature, drawn | Name, phone, a signature on glass, rendered to a picture that is hashed and named in the counter-signature layer the format already had — `signature.jpg` beside it, bound the way a photograph is. Both verifiers check it. A signature page in the PDF. |
+| Move-out linked to move-in | A new move-out offers every sealed move-in on the phone; the link goes in `movedInReportId`, the field the encoding has, and the walk starts with the move-in's rooms in its order. |
+| Shoot the same view | On a linked move-out, the move-in's photographs of the room sit beside the shutter, each a tap from its retake with the same caption. |
+| The diff page | `Compare.diff` in the domain; *same, changed, new, not photographed this time* per room in the app and in the PDF. Never what a change costs. |
+| Compare two bundles | An opened move-out is compared to the move-in this phone holds — on any phone that holds it — under the verdict. |
+| Walk out with Snag | One all-day event in the tenant's own calendar on the day the tenancy ends, with write-only access. Proved on the simulator, permission prompt and all. |
+| Find a report | A search row when there are more than two reports; by address; newest first; drafts and sealed apart. |
+| The app lock | Face ID, Touch ID or the passcode, through the phone's own `LocalAuthentication`; off by default; disabled where the phone has no passcode. The simulator answers with a passcode sheet, which the test cancels and reads the honest failure. |
+| Seal it before the boxes are in | One local notification a day after a draft is started, provisional so no prompt in the doorway; cancelled at the seal or the delete; off in Settings. |
+| Back up and restore | Every sealed bundle in one `.snagbackup` zip to Files; on the way back each bundle is verified before it is kept, and one already here is refused. |
+| Start a report from Siri | An App Intent with App Shortcuts phrases, the `snag://new` URL, and a Home Screen quick action, all ending in the same flag that opens the sheet. |
+| The walk on the Lock Screen | A Live Activity from a widget extension — the first second target in the hand-written project — with the address, rooms, items, snags and minutes; started with the walk, ended at the seal. Proved as far as a simulator reaches: the state, and that the calls are harmless where activities are off. |
 | A second verifier, in Python | `scripts/verify.py`, from `docs/BUNDLE-FORMAT.md` alone, P-256 included, no dependencies. `make verify-check` runs it against the app's own bundle and five tampers every time. The proof that the format document is enough. |

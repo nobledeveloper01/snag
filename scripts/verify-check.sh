@@ -28,6 +28,8 @@ cp -R "$FIX" "$T/c"; touch "$T/c/photos/$(printf 'ab%.0s' $(seq 32)).jpg"
 expect "a stray photograph" "altered: stray photograph" "$T/c"
 cp -R "$FIX" "$T/d"; rm "$T/d/countersign.sig"
 expect "a counter-signature with no signature" "altered: counter-signature incomplete" "$T/d"
+cp -R "$FIX" "$T/g"; printf '\x01' | dd of="$T/g/signature.jpg" bs=1 seek=20 conv=notrunc 2>/dev/null
+expect "one byte of the drawn signature flipped" "altered: signature image" "$T/g"
 cp -R "$FIX" "$T/e"; rm "$T/e/key.pub"
 expect "no key" "not a bundle" "$T/e"
 (cd "$FIX" && python3 -c "

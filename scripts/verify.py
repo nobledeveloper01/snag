@@ -243,6 +243,10 @@ def verify(files):
             return "altered: counter-signature decoding"
         if counter["reportId"] != hashlib.sha256(files["report.bin"]).digest():
             return "altered: counter-signature names another report"
+        if "signature.jpg" not in files:
+            return "altered: signature image missing"
+        if hashlib.sha256(files["signature.jpg"]).digest() != counter["signature"]:
+            return "altered: signature image"
     return "unaltered"
 
 
