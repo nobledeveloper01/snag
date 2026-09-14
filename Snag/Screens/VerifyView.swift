@@ -9,6 +9,7 @@ struct VerifyView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var scheme
     @State private var verdict: Verdict?
+    @State private var dir: URL?
 
     var body: some View {
         let palette = Palette.current(scheme)
@@ -27,7 +28,7 @@ struct VerifyView: View {
                     }
                     Section {
                         NavigationLink {
-                            ReportDetailView(report: r, bundle: url)
+                            ReportDetailView(report: r, bundle: dir ?? url)
                         } label: {
                             Text("\(r.rooms.count) \(Strings.room.lowercased())s · \(r.itemCount) \(Strings.items)").font(Type.bodyFont()).foregroundStyle(palette.textPrimary)
                                 .frame(minHeight: Target.standard)
@@ -37,8 +38,9 @@ struct VerifyView: View {
                 }
             }
             .scrollContentBackground(.hidden)
+            .listRoom()
             .background(LinearGradient(colors: palette.canvas, startPoint: .top, endPoint: .bottom).ignoresSafeArea())
-            .safeAreaInset(edge: .bottom) {
+            .pinned {
                 Button(Strings.done) { dismiss() }.buttonStyle(Primary(palette: palette)).padding(Gap.l)
             }
             .navigationTitle(Strings.verifyTitle)
@@ -46,7 +48,9 @@ struct VerifyView: View {
         .tint(palette.accent)
         .task {
             let scoped = url.startAccessingSecurityScopedResource()
-            verdict = Verifier.verify(url)
+            let opened = Verifier.open(url)
+            verdict = opened.verdict
+            dir = opened.dir
             if scoped { url.stopAccessingSecurityScopedResource() }
         }
     }

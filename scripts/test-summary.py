@@ -34,7 +34,7 @@ def main() -> int:
         return 1
     # A skip is named, not hidden: the device tests skip on a simulator, and
     # R2 does not move on a skip.
-    note = f", {skipped} skipped (the device tests — R2 needs a handset)" if skipped else ""
+    note = f", {skipped} skipped (a device test waiting on a handset, or a fixture writer waiting to be asked)" if skipped else ""
     print(f"{GREEN}✓{RESET} app suite: {passed} of {total} passed on the simulator, including the accessibility audit{note}")
     return 0
 

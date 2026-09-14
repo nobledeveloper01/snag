@@ -2,5 +2,6 @@
 // can replace the walk with the sealed screen instead of stacking on it.
 enum Route: Hashable {
     case draft(String)
+    case room(String, Int)
     case sealed(String)
 }

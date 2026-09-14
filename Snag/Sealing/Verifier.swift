@@ -18,6 +18,21 @@ enum Verdict: Equatable, Sendable {
 }
 
 enum Verifier {
+    /// A bundle arrives as a folder or as one file. One file is unpacked
+    /// beside the temporary directory and verified there; the directory
+    /// that holds the photographs is returned with the verdict so a screen
+    /// can show them.
+    static func open(_ url: URL) -> (verdict: Verdict, dir: URL) {
+        var isDir: ObjCBool = false
+        FileManager.default.fileExists(atPath: url.path, isDirectory: &isDir)
+        if isDir.boolValue { return (verify(url), url) }
+        guard let data = try? Data(contentsOf: url) else { return (.notABundle, url) }
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("opened-" + url.deletingPathExtension().lastPathComponent + ".snag")
+        try? FileManager.default.removeItem(at: dir)
+        do { try ZipFile.extract(data, to: dir) } catch { return (.notABundle, url) }
+        return (verify(dir), dir)
+    }
+
     static func verify(_ dir: URL) -> Verdict {
         let fm = FileManager.default
         guard let reportData = try? Data(contentsOf: dir.appendingPathComponent(SnagBundle.reportFile)),

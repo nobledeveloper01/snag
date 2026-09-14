@@ -44,8 +44,11 @@ what the report is and is not. The bundle format is public, in
 [`docs/BUNDLE-FORMAT.md`](docs/BUNDLE-FORMAT.md), so anybody may write a verifier.
 
 Thirty more features are planned and phased in
-[ADR-0004](docs/adr/0004-thirty-things-and-the-line-each-does-not-cross.md); eighteen of them
-are this phase's.
+[ADR-0004](docs/adr/0004-thirty-things-and-the-line-each-does-not-cross.md). The eighteen
+that are this phase's are built: templates and prompts that make the walk faster, a judge
+for dark and blurred photographs, EXIF stripped before the hash, a numbered PDF in Inter
+with a contact sheet and a QR that matches paper to a bundle, the bundle as one file for
+WhatsApp, and a second verifier in Python that CI runs against the app's own bundle.
 
 The pure-Swift domain — a report, its rooms and items, the three tiers, and that encoding
 — lives in a package that imports nothing, not even Foundation, and tests in seconds with

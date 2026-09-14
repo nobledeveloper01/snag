@@ -20,6 +20,19 @@ final class ReportStore {
         let report: Report
     }
 
+    /// Where the walk was when the app went away: a draft and a room. Set
+    /// when a room is opened, cleared when the walk is left on purpose.
+    var resume: (draft: String, room: Int)? {
+        get {
+            guard let d = UserDefaults.standard.string(forKey: "resume.draft") else { return nil }
+            return (d, UserDefaults.standard.integer(forKey: "resume.room"))
+        }
+        set {
+            UserDefaults.standard.set(newValue?.draft, forKey: "resume.draft")
+            UserDefaults.standard.set(newValue?.room ?? 0, forKey: "resume.room")
+        }
+    }
+
     private(set) var drafts: [Draft] = []
     private(set) var sealed: [Sealed] = []
     let root: URL
@@ -56,9 +69,10 @@ final class ReportStore {
     }
 
     @discardableResult
-    func newDraft(kind: Kind, address: String, now: Int64) -> Draft {
+    func newDraft(kind: Kind, address: String, now: Int64, template: RoomTemplate? = nil) -> Draft {
         let id = String(format: "%013d", now) + "-" + String(UInt32.random(in: 0...UInt32.max), radix: 36)
-        let d = Draft(id: id, report: Report(kind: kind, address: address, createdAt: now))
+        let rooms = (template?.rooms ?? []).map { Room(name: $0) }
+        let d = Draft(id: id, report: Report(kind: kind, address: address, createdAt: now, rooms: rooms))
         try? FileManager.default.createDirectory(at: draftDir(id).appendingPathComponent("photos"), withIntermediateDirectories: true)
         drafts.append(d)
         save(d)
@@ -97,9 +111,16 @@ final class ReportStore {
         try SnagBundle.write(report: bytes, seal: seal, photos: photos, to: url)
         try? FileManager.default.removeItem(at: draftDir(draft.id))
         drafts.removeAll { $0.id == draft.id }
+        if resume?.draft == draft.id { resume = nil }
         let s = Sealed(id: seal.id, url: url, report: draft.report)
         sealed.append(s)
         return s
+    }
+
+    func delete(draft d: Draft) {
+        try? FileManager.default.removeItem(at: draftDir(d.id))
+        drafts.removeAll { $0.id == d.id }
+        if resume?.draft == d.id { resume = nil }
     }
 
     func delete(sealed s: Sealed) {

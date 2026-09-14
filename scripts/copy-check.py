@@ -6,7 +6,7 @@ have not changed since signing; it proves nothing about when. The tempting
 words are one word long, so the gate is a word list over every user-facing
 string and the PDF's own text, run without building.
 
-What it reads: `Snag/Speech/Strings.swift`, `Snag/Report/ReportText.swift`,
+What it reads: `Snag/Speech/Strings.swift`, `Snag/Speech/Prompts.swift`, `Snag/Report/ReportText.swift`,
 `Config/Info.plist`, and `docs/APPSTORE.md` if it exists.
 """
 import re
@@ -18,6 +18,7 @@ GREEN, RED, RESET = "\033[0;32m", "\033[0;31m", "\033[0m"
 
 SOURCES = [
     ROOT / "Snag" / "Speech" / "Strings.swift",
+    ROOT / "Snag" / "Speech" / "Prompts.swift",
     ROOT / "Snag" / "Report" / "ReportText.swift",
     ROOT / "Config" / "Info.plist",
     ROOT / "docs" / "APPSTORE.md",

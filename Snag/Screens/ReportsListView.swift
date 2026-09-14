@@ -7,6 +7,7 @@ struct ReportsListView: View {
     @Bindable var store: ReportStore
     @Environment(\.colorScheme) private var scheme
     @State private var creating = false
+    @State private var checking = false
     @State private var path: [Route] = []
     @State private var opened: URL?
 
@@ -30,45 +31,63 @@ struct ReportsListView: View {
                 } else {
                     List {
                         if !store.drafts.isEmpty {
-                            Section(Strings.inProgress) {
+                            Section {
                                 ForEach(store.drafts) { draft in
                                     NavigationLink(value: Route.draft(draft.id)) { row(draft.report, palette) }
                                 }
+                            } header: {
+                                Text(Strings.inProgress).font(Type.secondaryFont()).foregroundStyle(palette.textSecondary)
                             }
                         }
                         if !store.sealed.isEmpty {
-                            Section(Strings.sealed) {
+                            Section {
                                 ForEach(store.sealed) { s in
                                     NavigationLink(value: Route.sealed(s.id)) { row(s.report, palette) }
                                 }
+                            } header: {
+                                Text(Strings.sealed).font(Type.secondaryFont()).foregroundStyle(palette.textSecondary)
                             }
                         }
                     }
                     .scrollContentBackground(.hidden)
+                .listRoom()
+            .listRoom()
                 }
             }
-            .safeAreaInset(edge: .bottom) {
-                Button(Strings.newReport) { creating = true }
-                    .buttonStyle(Primary(palette: palette))
-                    .padding(Gap.l)
+            .pinned {
+                VStack(spacing: Gap.s) {
+                    Button(Strings.newReport) { creating = true }
+                        .buttonStyle(Primary(palette: palette))
+                    if !store.sealed.isEmpty {
+                        Button(Strings.checkPaper) { checking = true }.buttonStyle(Secondary(palette: palette))
+                    }
+                }
+                .padding(Gap.l)
             }
             .navigationTitle(Strings.reports)
             .navigationDestination(for: Route.self) { route in
                 switch route {
                 case .draft(let id): WalkView(store: store, draftId: id, path: $path)
+                case .room(let id, let i): RoomView(store: store, draftId: id, roomIndex: i)
                 case .sealed(let id):
                     if let s = store.sealed.first(where: { $0.id == id }) { SealedView(store: store, sealed: s) }
                 }
             }
             .sheet(isPresented: $creating) { NewReportSheet(store: store) }
+            .sheet(isPresented: $checking) { CheckPaperView(store: store) }
             .sheet(item: $opened) { url in VerifyView(url: url) }
         }
         .tint(palette.accent)
         .onOpenURL { url in opened = url }
         .onAppear {
+            // A draft survives a kill: the walk resumes in the room it was in.
+            if path.isEmpty, let r = store.resume, let d = store.drafts.first(where: { $0.id == r.draft }), r.room < d.report.rooms.count {
+                path = [.draft(r.draft), .room(r.draft, r.room)]
+            }
             // -openLatest: the UI test's stand-in for a bundle arriving through
             // the share sheet, which the simulator cannot deliver.
             if CommandLine.arguments.contains("-openLatest"), let s = store.sealed.last { opened = s.url }
+            if CommandLine.arguments.contains("-scanLatest") { checking = true }
         }
     }
 

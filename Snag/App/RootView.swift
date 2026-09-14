@@ -9,6 +9,7 @@ struct RootView: View {
         if CommandLine.arguments.contains("-freshStore") {
             let root = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("Snag")
             try? FileManager.default.removeItem(at: root)
+            UserDefaults.standard.removeObject(forKey: "resume.draft")
         }
         return ReportStore()
     }()

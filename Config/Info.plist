@@ -23,17 +23,24 @@
 	<array><string>UIInterfaceOrientationPortrait</string></array>
 	<!-- A sealed bundle is a directory package; declaring it lets another
 	     phone open one in Snag and see the verdict. -->
+	<!-- The same bundle as one file, for the messaging apps that do not carry
+	     a folder. A zip with its own extension, so Snag claims it and no other zip. -->
 	<key>UTExportedTypeDeclarations</key>
 	<array><dict>
 		<key>UTTypeIdentifier</key><string>ng.snag.report</string>
 		<key>UTTypeDescription</key><string>Snag sealed report</string>
 		<key>UTTypeConformsTo</key><array><string>com.apple.package</string></array>
 		<key>UTTypeTagSpecification</key><dict><key>public.filename-extension</key><array><string>snag</string></array></dict>
+	</dict><dict>
+		<key>UTTypeIdentifier</key><string>ng.snag.report-file</string>
+		<key>UTTypeDescription</key><string>Snag sealed report, one file</string>
+		<key>UTTypeConformsTo</key><array><string>com.pkware.zip-archive</string></array>
+		<key>UTTypeTagSpecification</key><dict><key>public.filename-extension</key><array><string>snagz</string></array></dict>
 	</dict></array>
 	<key>CFBundleDocumentTypes</key>
 	<array><dict>
 		<key>CFBundleTypeName</key><string>Snag sealed report</string>
-		<key>LSItemContentTypes</key><array><string>ng.snag.report</string></array>
+		<key>LSItemContentTypes</key><array><string>ng.snag.report</string><string>ng.snag.report-file</string></array>
 		<key>LSHandlerRank</key><string>Owner</string>
 		<key>LSTypeIsPackage</key><true/>
 	</dict></array>

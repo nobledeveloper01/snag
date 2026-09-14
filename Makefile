@@ -29,10 +29,10 @@ help: ## Show this help
 # --- the gate ---------------------------------------------------------------
 
 .PHONY: ci
-ci: doc-check design-check counts-check copy-check network-check splash-check analyze test coverage-gate ## Everything CI runs
+ci: doc-check design-check counts-check copy-check network-check splash-check verify-check analyze test coverage-gate ## Everything CI runs
 
 .PHONY: gates
-gates: doc-check design-check counts-check copy-check network-check splash-check coverage-gate ## The blocking gates alone. These never go yellow.
+gates: doc-check design-check counts-check copy-check network-check splash-check verify-check coverage-gate ## The blocking gates alone. These never go yellow.
 
 .PHONY: doc-check
 doc-check: ## Verify the documentation is present, well-formed and current
@@ -57,6 +57,10 @@ network-check: ## Fail if the app has a network path
 .PHONY: splash-check
 splash-check: ## Fail if the launch screen, icon or mark are not what the palette says
 	@python3 scripts/splash-check.py
+
+.PHONY: verify-check
+verify-check: ## Fail if the Python verifier disagrees with the app's bundle, or fails to fire on a tampered one
+	@bash scripts/verify-check.sh
 
 .PHONY: brandmark
 # Not run by `ci`, which checks rather than writes. `splash-check` fails if

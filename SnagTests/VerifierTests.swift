@@ -100,6 +100,25 @@ final class VerifierTests: XCTestCase {
         guard case .altered("counter-signature is for another report") = Verifier.verify(b) else { return XCTFail("a moved counter-signature was accepted") }
     }
 
+    /// Writes `SnagTests/Fixtures/bundle-v1`: a sealed bundle with a
+    /// counter-signature, made by the app's own sealer, for the Python
+    /// verifier in `scripts/verify.py` to be checked against in CI. Run once:
+    ///   TEST_RUNNER_SNAG_WRITE_BUNDLE_FIXTURE=<abs path to SnagTests/Fixtures/bundle-v1> make test-app
+    /// Refuses to overwrite: a new fixture is a decision, not a side effect.
+    func testWriteBundleFixture() throws {
+        guard let path = ProcessInfo.processInfo.environment["SNAG_WRITE_BUNDLE_FIXTURE"] else { throw XCTSkip("SNAG_WRITE_BUNDLE_FIXTURE not set") }
+        let target = URL(fileURLWithPath: path)
+        guard !FileManager.default.fileExists(atPath: target.path) else { throw XCTSkip("fixture exists; delete it on purpose first") }
+        let (r, _) = try sealedBundle()
+        let b = dir.appendingPathComponent("b.snag")
+        let id = SnagBundle.sha256(Data(try Canonical.bytes(of: r)))
+        let c = CounterSignature(reportId: id, name: "Mr T. Okafor", phone: "+2348012345678", signatureHash: [UInt8](repeating: 7, count: 32), signedAt: 1_789_003_600)
+        let cBytes = try Canonical.bytes(of: c)
+        try SnagBundle.writeCounterSignature(cBytes, seal: try sealer.seal(cBytes), to: b)
+        guard case .unaltered = Verifier.verify(b) else { return XCTFail("the fixture must verify before it is written") }
+        try FileManager.default.copyItem(at: b, to: target)
+    }
+
     func testNotABundle() {
         XCTAssertEqual(Verifier.verify(dir.appendingPathComponent("nothing")), .notABundle)
     }

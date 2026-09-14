@@ -42,8 +42,9 @@ struct ReviewView: View {
                 }
             }
             .scrollContentBackground(.hidden)
+            .listRoom()
             .background(LinearGradient(colors: palette.canvas, startPoint: .top, endPoint: .bottom).ignoresSafeArea())
-            .safeAreaInset(edge: .bottom) {
+            .pinned {
                 VStack(spacing: Gap.s) {
                     Button(Strings.seal) { seal() }.buttonStyle(Primary(palette: palette))
                     Button(Strings.cancel) { dismiss() }.buttonStyle(Secondary(palette: palette))
@@ -58,6 +59,7 @@ struct ReviewView: View {
     private func seal() {
         do {
             let sealed = try store.seal(draft, with: try Sealer())
+            Haptics.sealed()
             dismiss()
             path = [.sealed(sealed.id)]
         } catch {

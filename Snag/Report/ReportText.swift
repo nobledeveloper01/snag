@@ -2,6 +2,15 @@
 // gate; the last page is where the report says what it is and is not.
 enum ReportText {
     static let title = "Condition report"
+    static let rooms = "Rooms"
+    static let colRoom = "Room"
+    static let colItems = "Items"
+    static let colSnags = "Snags"
+    static let colTier = "Tier"
+    static let contactSheet = "Every photograph"
+    static let contactSheetHint = "Each photograph with the first twelve characters of its hash. The bundle names each photograph by its full hash, so a print can be matched to the file it came from."
+    static let page = "Page"
+    static let of = "of"
     static let whatThisIs = "What this report is"
     static let whatThisIsBody = [
         "The photographs in this report were taken by the Snag app and hashed at the moment of capture. The report was sealed by a key that never left the phone that made it, and the sealed bundle has not been altered since — the app that opens it says so, or says that it has.",

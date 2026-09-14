@@ -25,3 +25,21 @@ is in [`ROADMAP.md`](ROADMAP.md).
 
 | | What it is for |
 |---|---|
+| Room templates | Self-contain to duplex: the rooms are named before the walk starts. A tenant in a doorway makes one decision, not seven. Domain: `RoomTemplate`. |
+| Per-room prompts | The meter, the water heater, the burglary bars, the flush: what a Lagos flat has and a tenant forgets. One tap photographs with the caption started. `Prompts.swift`, read by the copy gate. |
+| Meter readings as items | The prepaid and water meters, photographed, the number in the caption in the tenant's words — never a number the app made, never money. |
+| Keys | How many were handed over, counted on the sheet and photographed on the table. |
+| Edit and delete before the seal | A wrong photograph is not a wrong report. Captions edited, items removed, rooms renamed, reordered and removed. After the seal, nothing. |
+| The same photograph twice is noticed | Equal hashes, one item, refused before the bytes are written. Domain: `Report.contains(photoHash:)`. Proved with `-repeatFixture`. |
+| Too dark, too blurred | A 96-pixel grey copy, mean luminance and a Laplacian's variance, judged before the hash; the word under the picture and the torch offered. Thresholds set by fixtures. |
+| The torch | The design floor is a flat with the power off. Beside the shutter, on phones that have one. |
+| Nothing but the picture | Re-encoded through a renderer before the hash: no EXIF, no GPS, no maker note. Proved against a JPEG tagged with a Lagos latitude. |
+| A draft survives a kill | The walk resumes in the room it was in. Proved by terminating the app mid-walk. |
+| The seal you can feel | A tap at capture, a thud at the seal, a nudge at a refusal. |
+| The cover | Minutes walked from first photograph to last, and a table of rooms with their snags and tiers. Domain: `Report.walked`, `minutesWalked`, `roomLabels`. |
+| The PDF set in Inter, numbered | As `DESIGN.md` said since Phase 0 — and the font name was wrong until `TypeTests` asked UIFont; the app had been in the system face without a word. Every page carries the address, the id and *page n of N*. |
+| The contact sheet | Every photograph, small, with twelve characters of its hash, so a print can be matched to the file it came from. |
+| The QR on the cover, and *Check a paper copy* | The id and eight bytes of the key's hash; the camera or a typed line matches paper to a bundle on this phone. Never says the paper is true. |
+| One file | `<id>.snagz`, a stored zip written by forty lines of our own, because WhatsApp does not carry a folder. The reader also takes deflated entries, proved against a zip `zip -X` made. |
+| The share message carries the id | The words travel with the bytes: what it is, how to check it, which one it is. |
+| A second verifier, in Python | `scripts/verify.py`, from `docs/BUNDLE-FORMAT.md` alone, P-256 included, no dependencies. `make verify-check` runs it against the app's own bundle and five tampers every time. The proof that the format document is enough. |

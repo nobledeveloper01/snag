@@ -124,3 +124,45 @@ is listed if it decodes, and the screen says what the verifier says.
 **`firstMatch` on a label that two screens share taps the wrong one.** With
 *Review* on the walk, the sheet's *Add a room* was no longer first. An
 identifier on the sheet's button; the label stays for the person.
+
+## 2026-09-14, later — the thirty, part one
+
+Eighteen features between two and four in the morning, in three batches
+with one simulator run each where it could be managed: the walk
+(templates, prompts, meter and keys, edit and delete, the duplicate rule,
+resume, haptics), the capture (the judge, the torch, the strip), the paper
+(the cover, Inter, page numbers, the contact sheet, the QR, one file, the
+share message, the Python verifier). Domain first for the parts that are
+data — templates, the duplicate rule, the timeline, the room labels — with
+sixteen tests; the app wired; the audit over every new screen.
+
+### What surprised us
+
+**The app was not in Inter.** `DESIGN.md` had said "Inter, bundled" since
+Phase 0, `Type.swift` said `.custom("Inter")`, and `UIFont(name: "Inter")`
+returned nil: the variable font's PostScript name is `InterVariable` and
+SwiftUI falls back to the system face without a word. Found by the PDF
+test asking for the font's family. `TypeTests` now asks UIFont directly,
+and `design-check` refuses any font that is not relative to a text style.
+
+**The audit's Dynamic Type check is not a Dynamic Type check.** Three
+rows in a row on the paper-check screen were called "partially
+unsupported" — the verdict, then the Check button, then the hint — as the
+screen was rearranged. Screenshotted at L and at AX5, every one of them
+scales. The check measures a row's growth in place, and a row near the
+bottom of a list is clipped as it grows. The audit no longer asks it;
+the source is checked for fixed sizes instead, and `.textClipped` at the
+largest size says what a person would see.
+
+**A fixture that repeats is a duplicate.** The photo source was made per
+room, its shot counter restarted, and the bedroom's first photograph was
+the kitchen's — refused, correctly, by the rule written an hour earlier.
+One source for the app now; the rule stays.
+
+**A per-word `capitalized` is not sentence case.** "Two Bedroom", "Boys'
+Quarters". A four-line `sentenceCased`.
+
+**The Python verifier agreed first time.** Forty lines of P-256 from the
+constants, a DER parser, the decoder from the format document, and the
+app's own sealed bundle read *unaltered* on the first run. The gate hands
+it five tampers every run so that agreement is never the only evidence.

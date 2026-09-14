@@ -13,6 +13,9 @@ enum SnagBundle {
     static let photosDir = "photos"
     static let counterFile = "countersign.bin"
     static let counterSigFile = "countersign.sig"
+    /// The bundle as one file: the same files, zipped, stored. WhatsApp
+    /// carries a file and not a folder.
+    static let zipExtension = "snagz"
 
     static func hex(_ bytes: [UInt8]) -> String { bytes.map { String(format: "%02x", $0) }.joined() }
     static func sha256(_ data: Data) -> [UInt8] { Array(SHA256.hash(data: data)) }
@@ -30,6 +33,14 @@ enum SnagBundle {
             try? FileManager.default.removeItem(at: dir.appendingPathComponent(photosDir).appendingPathComponent(hex(hash) + ".jpg"))
             try FileManager.default.copyItem(at: src, to: dir.appendingPathComponent(photosDir).appendingPathComponent(hex(hash) + ".jpg"))
         }
+    }
+
+    /// `<id>.snagz` beside the bundle, rewritten each time it is asked for
+    /// so it is never older than the bundle.
+    static func zip(_ dir: URL) throws -> URL {
+        let url = dir.deletingPathExtension().appendingPathExtension(zipExtension)
+        try ZipFile.archive(directory: dir).write(to: url)
+        return url
     }
 
     static func writeCounterSignature(_ bytes: [UInt8], seal: Seal, to dir: URL) throws {

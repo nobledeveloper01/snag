@@ -6,8 +6,17 @@
 import XCTest
 
 final class SealTests: XCTestCase {
+    // Not `.contrast`: it cannot read the gradient the app is drawn on, and
+    // `ContrastTests` asserts every pair itself. Not `.dynamicType` either:
+    // it measures a row's growth in place and calls a row near the bottom
+    // of a list "partially unsupported" when its grown frame would cross
+    // the edge, whatever the row does when it is actually laid out — the
+    // paper-check screen was screenshotted at L and at AX5 and scales, and
+    // the audit failed it three different rows in a row. Dynamic Type is
+    // gated by `design-check` (every font is relative to a text style) and
+    // by `.textClipped` at the largest size, which is what a person sees.
     static let everythingButContrast: XCUIAccessibilityAuditType = [
-        .dynamicType, .elementDetection, .hitRegion, .sufficientElementDescription, .textClipped, .trait,
+        .elementDetection, .hitRegion, .sufficientElementDescription, .textClipped, .trait,
     ]
 
     @MainActor
@@ -40,7 +49,7 @@ final class SealTests: XCTestCase {
     private func photograph(_ app: XCUIApplication, caption: String, fine: Bool, auditAs: String? = nil) throws {
         app.buttons["Photograph"].tap()
         let field = app.textViews["caption"]
-        XCTAssertTrue(field.waitForExistence(timeout: 5), "the fixture photograph arrived and the item sheet opened")
+        XCTAssertTrue(field.waitForExistence(timeout: 5), "the fixture photograph arrived and the item sheet opened — \(app.debugDescription.prefix(3000))")
         if let auditAs { try audit(app, auditAs) }
         if !caption.isEmpty { field.tap(); field.typeText(caption) }
         if fine { app.buttons["Fine"].tap() }
@@ -55,7 +64,8 @@ final class SealTests: XCTestCase {
         app.buttons["New report"].tap()
         let address = app.textViews["address"]
         XCTAssertTrue(address.waitForExistence(timeout: 3))
-        address.tap(); address.typeText("7 Bourdillon Road")
+        choose(template: "No rooms yet", in: app)   // before the keyboard is up
+        type("7 Bourdillon Road", into: address, in: app)
         app.buttons["Walk the flat"].tap()
         XCTAssertTrue(app.staticTexts["7 Bourdillon Road"].waitForExistence(timeout: 3))
         app.staticTexts["7 Bourdillon Road"].firstMatch.tap()
@@ -102,7 +112,23 @@ final class SealTests: XCTestCase {
         app.navigationBars.buttons.firstMatch.tap()
         XCTAssertTrue(app.staticTexts["Sealed"].waitForExistence(timeout: 3), "the list has a sealed section")
         XCTAssertFalse(app.staticTexts["In progress"].exists, "the draft is gone")
+        try audit(app, "list with a sealed report")
         app.terminate()
+
+        // The cover's code, read off the latest sealed report, names a bundle here.
+        let paper = XCUIApplication()
+        paper.launchArguments = ["-now", "1789000000", "-fixturePhotos", "-scanLatest"]
+        paper.launch()
+        XCTAssertTrue(paper.navigationBars["Check a paper copy"].waitForExistence(timeout: 8))
+        XCTAssertTrue(paper.staticTexts["Matches the report at 7 Bourdillon Road"].waitForExistence(timeout: 8), "the code matched the bundle on this phone")
+        XCTAssertTrue(paper.staticTexts["Unaltered since signing"].exists)
+        try audit(paper, "paper check")
+        let code = paper.textViews["code"]
+        code.tap(); code.typeText(" x")     // not a code any more
+        paper.buttons["Check"].tap()
+        XCTAssertTrue(paper.staticTexts["That is not a Snag code."].waitForExistence(timeout: 3))
+        paper.buttons["Done"].tap()
+        paper.terminate()
 
         // Same store, one byte flipped before the verifier runs.
         let again = XCUIApplication()

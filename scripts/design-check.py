@@ -106,13 +106,27 @@ def main() -> int:
     if gaps != numbers(sentence(design, "Spacing on a four-point grid")):
         failures.append(f"the spacing grid is {sorted(gaps)} in Target.swift and DESIGN.md says otherwise")
 
+    # Dynamic Type: every font in the app is relative to a text style. A
+    # `.system(size:)` or a `.custom(_, size:)` without `relativeTo:` is a
+    # fixed size the user's setting cannot reach, and the audit's own check
+    # for this is not trusted (see SnagUITests) — so the source is.
+    fixed: list[str] = []
+    for swift in sorted((ROOT / "Snag").rglob("*.swift")):
+        if swift.name in ("ReportPDF.swift",):     # paper has no Dynamic Type
+            continue
+        for n, line in enumerate(swift.read_text().splitlines(), 1):
+            if re.search(r"\.system\(size:", line) or (re.search(r"\.custom\(", line) and "relativeTo:" not in line):
+                fixed.append(f"{swift.relative_to(ROOT)}:{n}: {line.strip()}")
+    if fixed:
+        failures.append("fixed font sizes, which Dynamic Type cannot scale:\n    " + "\n    ".join(fixed))
+
     for line in failures:
         print(f"{RED}✗{RESET} {line}")
     if failures:
         print(f"\n{RED}design gate failed{RESET} — DESIGN.md is what a person reads.")
         return 1
     print(f"{GREEN}✓{RESET} DESIGN.md agrees with the tokens: {len(rows)} colour roles and the gradient, "
-          "the type scale, the target, the radii and the spacing grid")
+          "the type scale, the target, the radii and the spacing grid, and every font scales")
     return 0
 
 

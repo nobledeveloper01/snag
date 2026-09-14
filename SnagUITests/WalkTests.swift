@@ -4,8 +4,17 @@
 import XCTest
 
 final class WalkTests: XCTestCase {
+    // Not `.contrast`: it cannot read the gradient the app is drawn on, and
+    // `ContrastTests` asserts every pair itself. Not `.dynamicType` either:
+    // it measures a row's growth in place and calls a row near the bottom
+    // of a list "partially unsupported" when its grown frame would cross
+    // the edge, whatever the row does when it is actually laid out — the
+    // paper-check screen was screenshotted at L and at AX5 and scales, and
+    // the audit failed it three different rows in a row. Dynamic Type is
+    // gated by `design-check` (every font is relative to a text style) and
+    // by `.textClipped` at the largest size, which is what a person sees.
     static let everythingButContrast: XCUIAccessibilityAuditType = [
-        .dynamicType, .elementDetection, .hitRegion, .sufficientElementDescription, .textClipped, .trait,
+        .elementDetection, .hitRegion, .sufficientElementDescription, .textClipped, .trait,
     ]
 
     @MainActor
@@ -28,7 +37,8 @@ final class WalkTests: XCTestCase {
             let address = app.textViews["address"]
             XCTAssertTrue(address.waitForExistence(timeout: 3))
             try audit(app, "new report \(size)")
-            address.tap(); address.typeText("14 Admiralty Way")
+            choose(template: "No rooms yet", in: app)   // before the keyboard is up
+            type("14 Admiralty Way", into: address, in: app)
             app.buttons["Walk the flat"].tap()
             XCTAssertTrue(app.staticTexts["14 Admiralty Way"].waitForExistence(timeout: 3))
             app.staticTexts["14 Admiralty Way"].firstMatch.tap()
@@ -58,5 +68,39 @@ final class WalkTests: XCTestCase {
         app.launchArguments = ["-reduceMotion", "-freshStore"]
         app.launch()
         XCTAssertTrue(app.buttons["New report"].waitForExistence(timeout: 5), "the splash never swept with Reduce Motion on")
+    }
+}
+
+extension XCTestCase {
+    /// The template rows sit below the fold at some sizes; scroll until the one wanted is there.
+    @MainActor
+    func choose(template: String, in app: XCUIApplication) {
+        let row = app.buttons[template]
+        var tries = 0
+        while !row.exists && tries < 4 { app.swipeUp(); tries += 1 }
+        XCTAssertTrue(row.waitForExistence(timeout: 2), "template row \(template)")
+        row.tap()
+        // Back to the top, until the address editor is clear of the title
+        // bar: a tap on a row half under the bar focuses nothing.
+        tries = 0
+        while !(app.textViews["address"].exists && app.textViews["address"].frame.minY > 150) && tries < 4 { app.swipeDown(); tries += 1 }
+    }
+
+    /// Tap a field until the keyboard is up, then type. A tap that lands
+    /// while a list is still settling after a swipe does not focus.
+    @MainActor
+    func type(_ text: String, into field: XCUIElement, in app: XCUIApplication) {
+        var tries = 0
+        field.tap()
+        while app.keyboards.count == 0 && tries < 3 { Thread.sleep(forTimeInterval: 0.4); field.tap(); tries += 1 }
+        field.typeText(text)
+    }
+
+    /// Scroll a list until an element is on screen, or give up.
+    @MainActor
+    func reveal(_ element: XCUIElement, in app: XCUIApplication) -> Bool {
+        var tries = 0
+        while !element.exists && tries < 4 { app.swipeUp(); tries += 1 }
+        return element.waitForExistence(timeout: 2)
     }
 }

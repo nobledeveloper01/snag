@@ -10,6 +10,7 @@ struct SealedView: View {
     @Environment(\.colorScheme) private var scheme
     @State private var verdict: Verdict?
     @State private var pdf: URL?
+    @State private var zip: URL?
 
     var body: some View {
         let palette = Palette.current(scheme)
@@ -44,15 +45,21 @@ struct SealedView: View {
                 }
             }
             .scrollContentBackground(.hidden)
+            .listRoom()
         }
-        .safeAreaInset(edge: .bottom) {
+        .pinned {
             VStack(spacing: Gap.s) {
                 if let pdf {
                     ShareLink(item: pdf) { Text(Strings.sharePDF).frame(maxWidth: .infinity) }.buttonStyle(Primary(palette: palette))
                 } else {
                     Button(Strings.sharePDF) {}.buttonStyle(Primary(palette: palette)).disabled(true)
                 }
-                ShareLink(item: sealed.url) { Text(Strings.shareBundle).frame(maxWidth: .infinity) }.buttonStyle(Secondary(palette: palette))
+                if let zip {
+                    // One file, with a message that carries the id and how to
+                    // check it — the words travel with the bytes.
+                    ShareLink(item: zip, message: Text("\(Strings.shareMessage) \(sealed.id)")) { Text(Strings.shareBundle).frame(maxWidth: .infinity) }
+                        .buttonStyle(Secondary(palette: palette))
+                }
             }
             .padding(Gap.l)
         }
@@ -67,7 +74,9 @@ struct SealedView: View {
                 if var d = try? Data(contentsOf: f), !d.isEmpty { d[d.count - 1] ^= 0x01; try? d.write(to: f) }
             }
             verdict = Verifier.verify(sealed.url)
-            pdf = try? ReportPDF.write(sealed)
+            let key = (try? Data(contentsOf: sealed.url.appendingPathComponent(SnagBundle.keyFile))).map(Array.init) ?? []
+            pdf = try? ReportPDF.write(sealed, publicKey: key)
+            zip = try? SnagBundle.zip(sealed.url)
         }
     }
 }
