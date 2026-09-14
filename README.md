@@ -111,6 +111,21 @@ The pure-Swift domain — a report, its rooms and items, the three tiers, and th
 — lives in a package that imports nothing, not even Foundation, and tests in seconds with
 no simulator. `make coverage-gate` will hold it above 95%.
 
+## Measured and scanned, short of the sensor
+
+<p align="center">
+  <img src="docs/screenshots/12-measure.png" width="230" alt="Measure this room: the fixture room's four corners tapped, 3.63 by 4.23 metres, 15.1 square metres, Use this measurement" />
+  <img src="docs/screenshots/07-room-with-items.png" width="230" alt="The kitchen with its numbers and the word measured beside them, two items below, the Measure and Scan chips above the shutter" />
+  <img src="docs/screenshots/13-settings.png" width="230" alt="Settings: the five languages — English, Naijá, Yorùbá, Hausa, Igbo — then the lock, the nudge, iCloud and backup" />
+</p>
+
+On a phone, *Measure this room* is ARKit: the floor found, a corner per tap. *Scan this
+room* is RoomPlan on a LiDAR phone: a walk, a floor plan, doors and windows where they
+are. On the simulator, which has neither, a fixture room stands in for both, so the
+arithmetic, the tier, the plan in the bundle and the PDF are all proved here; the five
+per cent against a tape measure is R1 and R2. The same numbers can be added after the seal
+as an amendment — a second signature beside the first, changing nothing the first signed.
+
 ## The paper, and the other phone
 
 <p align="center">
@@ -165,7 +180,7 @@ eight tampers), `domain-purity` (the domain imports nothing), `coverage-gate` (t
 above 95%), and the app suite on the simulator, which fails on zero tests.
 
 **The numbers.** 24 domain tests · 32 app unit tests · 16 UI tests under the accessibility
-audit (a fixture writer among the first and the screenshot set among the second skip until asked) · 203 strings in five languages · 5 ADRs · 5 release gates · 11 screenshots.
+audit (a fixture writer among the first and the screenshot set among the second skip until asked) · 203 strings in five languages · 5 ADRs · 5 release gates · 13 screenshots.
 
 Every phase has a one-sentence exit gate in [`docs/ROADMAP.md`](docs/ROADMAP.md). Every
 non-obvious decision has an ADR in [`docs/adr/`](docs/adr/). Every session has a journal

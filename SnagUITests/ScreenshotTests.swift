@@ -17,7 +17,7 @@ final class ScreenshotTests: XCTestCase {
     func testTheSetForTheReadme() throws {
         guard ProcessInfo.processInfo.environment["SNAG_SCREENSHOTS"] == "1" else { throw XCTSkip("screenshots only when asked") }
         let app = XCUIApplication()
-        app.launchArguments = ["-now", "1789000000", "-fixturePhotos", "-freshStore", "-darkFixture"]
+        app.launchArguments = ["-now", "1789000000", "-fixturePhotos", "-fixtureFloors", "-freshStore", "-darkFixture"]
         app.launch()
         XCTAssertTrue(app.buttons["New report"].waitForExistence(timeout: 5))
         shot(app, "01-empty")
@@ -48,6 +48,15 @@ final class ScreenshotTests: XCTestCase {
         XCTAssertTrue(app.textViews["caption"].waitForExistence(timeout: 5))
         app.buttons["Fine"].tap(); app.buttons["Done"].tap()
         XCTAssertTrue(app.staticTexts["Tiles"].waitForExistence(timeout: 3))
+        // The measured tier from the fixture room.
+        XCTAssertTrue(app.buttons["Measure this room"].waitForExistence(timeout: 3), app.debugDescription)
+        app.buttons["Measure this room"].tap()
+        XCTAssertTrue(app.buttons["fixtureCorners"].waitForExistence(timeout: 3))
+        app.buttons["fixtureCorners"].tap()
+        XCTAssertTrue(app.staticTexts["dimensions"].waitForExistence(timeout: 3))
+        shot(app, "12-measure")
+        app.buttons["useMeasurement"].tap()
+        XCTAssertTrue(app.staticTexts["roomDimensions"].waitForExistence(timeout: 3))
         shot(app, "07-room-with-items")
         app.navigationBars.buttons.firstMatch.tap()
         XCTAssertTrue(app.buttons["Review"].waitForExistence(timeout: 3))
@@ -78,5 +87,12 @@ final class ScreenshotTests: XCTestCase {
         XCTAssertTrue(paper.staticTexts["Altered"].exists)
         shot(paper, "11-paper-check")
         paper.terminate()
+
+        let settings = XCUIApplication()
+        settings.launchArguments = ["-now", "1789000000", "-fixturePhotos", "-settings"]
+        settings.launch()
+        XCTAssertTrue(settings.buttons["lang-en"].waitForExistence(timeout: 8))
+        shot(settings, "13-settings")
+        settings.terminate()
     }
 }
