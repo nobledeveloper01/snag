@@ -5,7 +5,7 @@ import SnagDomain
 @MainActor
 final class StoreTests: XCTestCase {
     func testADraftIsMadeAndUpdated() {
-        let store = ReportStore()
+        let store = ReportStore(root: FileManager.default.temporaryDirectory.appendingPathComponent("store-\(UUID().uuidString)"))
         var d = store.newDraft(kind: .moveIn, address: "14 Admiralty Way", now: 1_789_000_000)
         XCTAssertEqual(store.drafts.count, 1)
         d.report.rooms.append(Room(name: .kitchen))

@@ -3,7 +3,15 @@ import SwiftUI
 
 struct RootView: View {
     @State private var swept = false
-    @State private var store = ReportStore()
+    // -freshStore empties the store before the UI tests, so a run never
+    // sees the last run's reports.
+    @State private var store: ReportStore = {
+        if CommandLine.arguments.contains("-freshStore") {
+            let root = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("Snag")
+            try? FileManager.default.removeItem(at: root)
+        }
+        return ReportStore()
+    }()
 
     var body: some View {
         ZStack {

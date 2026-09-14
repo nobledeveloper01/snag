@@ -10,6 +10,20 @@ Entries say *why*, not just what.
 
 ### Added
 
+- **Phase 1, the report.** Photographs hashed the moment they arrive and
+  stored by hash; items with a caption and *snag* or *fine*; a review; a
+  seal by a P-256 key in the Secure Enclave or, failing one, the Keychain;
+  the bundle on disk as `docs/BUNDLE-FORMAT.md` describes; a sealed screen
+  that verifies its own bundle every time it appears; the PDF, one room per
+  page with the tier word beside every room and the last page saying what
+  the report is; opening a `.snag` bundle from outside; sharing both. The
+  verifier is proved against every flipped byte of every file in a unit test
+  and against one flipped byte on a real screen in a UI test, because a
+  verifier that has never seen a tampered file is one nobody knows the
+  behaviour of.
+- **ADR-0004, thirty things.** The plan for thirty more features, each
+  checked against the seven rules, phased into the roadmap: eighteen for
+  this phase, six for the handover, six for the agent with five flats.
 - **Phase 0.** The domain as a package that imports nothing: the report
   model, the canonical encoding and its decoder, the move-out diff, and the
   checked-in fixture that fixes the encoding byte for byte. The app: a

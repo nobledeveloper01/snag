@@ -36,10 +36,16 @@ See [`docs/00-PRODUCT-STATEMENT.md`](docs/00-PRODUCT-STATEMENT.md) for the full 
 
 ## Status
 
-**Phase 0 of 5 — foundation.** The documents are written and nothing is built. The first
-thing built is the canonical encoding — the one byte-exact serialisation of a report that
-every signature will ever be over — and the checked-in fixture that promises it never
-changes.
+**Phase 1 of 5 — the report.** A tenant walks the flat room by room, photographs what is
+wrong and what is fine, and seals the report with a key that never leaves the phone. The
+sealed bundle verifies itself on screen; one flipped byte and the screen says *Altered*,
+proved by a UI test that flips it. The PDF has one page per room and a last page that says
+what the report is and is not. The bundle format is public, in
+[`docs/BUNDLE-FORMAT.md`](docs/BUNDLE-FORMAT.md), so anybody may write a verifier.
+
+Thirty more features are planned and phased in
+[ADR-0004](docs/adr/0004-thirty-things-and-the-line-each-does-not-cross.md); eighteen of them
+are this phase's.
 
 The pure-Swift domain — a report, its rooms and items, the three tiers, and that encoding
 — lives in a package that imports nothing, not even Foundation, and tests in seconds with

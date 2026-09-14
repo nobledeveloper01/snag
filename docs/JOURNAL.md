@@ -79,3 +79,48 @@ frame. Four screens, four defects, before any person looked.
 fire" on a removed tier because the `sed` was one space off and removed
 nothing. Applied properly, it fired on two documents. Check the mutation
 landed before reading the result.
+
+## 2026-09-14 — Phase 1: the first seal
+
+The sealer and the verifier first, as units: a key in the Secure Enclave
+where the simulator pretends to have one and in the Keychain where it does
+not, a DER signature over SHA-256 of the canonical bytes, a bundle on disk,
+and a verifier that was handed every file with every byte flipped in turn —
+over fifteen hundred bundles, every one *altered*. Then the screens: the
+shutter fed by three fixture photographs on the simulator, the item sheet,
+the review, the seal, the sealed screen that runs the verifier over its own
+files every time it appears, the PDF, and the document path so a bundle
+from another phone opens to the same verdict. `SealTests` walks two rooms
+and six photographs to a seal — the shape the exit gate names — relaunches
+with `-tamper`, and reads *Altered* off the screen. Sixteen app tests, the
+domain's twelve, `make ci` green.
+
+Then the thirty. ADR-0004, phased: eighteen for the walk and the paper,
+six for the handover, six for the agent. The encoding is the constraint
+none of Tender's twenty had: nothing may add a field, so everything is an
+item, a caption, a room, or a layer beside the report.
+
+### What surprised us
+
+**An unsigned app has no Keychain.** `CODE_SIGNING_ALLOWED=NO` had been
+carried over from Tender, which stores nothing. The Keychain answered
+-34018 to an app with no application identifier. The simulator signs ad
+hoc on its own; the flag is gone.
+
+**The audit reads a row under a pinned button as visible.** The sealed
+screen listed every room and item under a two-button inset, and the row
+nearest the inset failed the Dynamic Type check: at the larger size it
+slid under the buttons and its measured frame stopped growing. Three
+attempts at restructuring the row did nothing, because the row was never
+the problem. The detail moved behind a link to a screen with no pinned
+action, where a long report scrolls to its end — which is also where a
+reader wants it.
+
+**A store that lists only bundles that verify hides the tampered one.** The
+opened-bundle test found it: after `-tamper` the report vanished from the
+list instead of being shown as altered. A bundle that has gone bad on disk
+is listed if it decodes, and the screen says what the verifier says.
+
+**`firstMatch` on a label that two screens share taps the wrong one.** With
+*Review* on the walk, the sheet's *Add a room* was no longer first. An
+identifier on the sheet's button; the label stays for the person.

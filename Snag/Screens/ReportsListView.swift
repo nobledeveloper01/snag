@@ -1,5 +1,5 @@
 // The list of reports, and the empty state that is most tenants' first
-// screen: one sentence, one button.
+// screen: one sentence, one button. Drafts above, sealed below.
 import SwiftUI
 import SnagDomain
 
@@ -7,13 +7,15 @@ struct ReportsListView: View {
     @Bindable var store: ReportStore
     @Environment(\.colorScheme) private var scheme
     @State private var creating = false
+    @State private var path: [Route] = []
+    @State private var opened: URL?
 
     var body: some View {
         let palette = Palette.current(scheme)
-        NavigationStack {
+        NavigationStack(path: $path) {
             ZStack {
                 LinearGradient(colors: palette.canvas, startPoint: .top, endPoint: .bottom).ignoresSafeArea()
-                if store.drafts.isEmpty {
+                if store.drafts.isEmpty && store.sealed.isEmpty {
                     // In a ScrollView, so the largest text sizes scroll rather
                     // than clip — the audit found it on the first run.
                     ScrollView {
@@ -26,14 +28,20 @@ struct ReportsListView: View {
                         .frame(maxWidth: .infinity)
                     }
                 } else {
-                    List(store.drafts) { draft in
-                        NavigationLink(value: draft.id) {
-                            VStack(alignment: .leading, spacing: Gap.xs) {
-                                Text(draft.report.address).font(Type.titleFont()).foregroundStyle(palette.textPrimary)
-                                Text("\(draft.report.kind == .moveIn ? Strings.moveIn : Strings.moveOut) · \(draft.report.rooms.count) \(Strings.room.lowercased())s · \(draft.report.snagCount) \(Strings.snags)")
-                                    .font(Type.secondaryFont()).foregroundStyle(palette.textSecondary)
+                    List {
+                        if !store.drafts.isEmpty {
+                            Section(Strings.inProgress) {
+                                ForEach(store.drafts) { draft in
+                                    NavigationLink(value: Route.draft(draft.id)) { row(draft.report, palette) }
+                                }
                             }
-                            .frame(minHeight: Target.standard)
+                        }
+                        if !store.sealed.isEmpty {
+                            Section(Strings.sealed) {
+                                ForEach(store.sealed) { s in
+                                    NavigationLink(value: Route.sealed(s.id)) { row(s.report, palette) }
+                                }
+                            }
                         }
                     }
                     .scrollContentBackground(.hidden)
@@ -45,14 +53,36 @@ struct ReportsListView: View {
                     .padding(Gap.l)
             }
             .navigationTitle(Strings.reports)
-            .navigationDestination(for: Int.self) { id in
-                if let draft = store.drafts.first(where: { $0.id == id }) { WalkView(store: store, draftId: draft.id) }
+            .navigationDestination(for: Route.self) { route in
+                switch route {
+                case .draft(let id): WalkView(store: store, draftId: id, path: $path)
+                case .sealed(let id):
+                    if let s = store.sealed.first(where: { $0.id == id }) { SealedView(store: store, sealed: s) }
+                }
             }
             .sheet(isPresented: $creating) { NewReportSheet(store: store) }
+            .sheet(item: $opened) { url in VerifyView(url: url) }
         }
         .tint(palette.accent)
+        .onOpenURL { url in opened = url }
+        .onAppear {
+            // -openLatest: the UI test's stand-in for a bundle arriving through
+            // the share sheet, which the simulator cannot deliver.
+            if CommandLine.arguments.contains("-openLatest"), let s = store.sealed.last { opened = s.url }
+        }
+    }
+
+    private func row(_ report: Report, _ palette: Palette) -> some View {
+        VStack(alignment: .leading, spacing: Gap.xs) {
+            Text(report.address).font(Type.titleFont()).foregroundStyle(palette.textPrimary)
+            Text("\(report.kind == .moveIn ? Strings.moveIn : Strings.moveOut) · \(report.rooms.count) \(Strings.room.lowercased())s · \(report.snagCount) \(Strings.snags)")
+                .font(Type.secondaryFont()).foregroundStyle(palette.textSecondary)
+        }
+        .frame(minHeight: Target.standard)
     }
 }
+
+extension URL: @retroactive Identifiable { public var id: String { absoluteString } }
 
 /// The one primary action per screen, pinned below the scroll: 64 pt, the
 /// accent, full width.
@@ -66,5 +96,20 @@ struct Primary: ButtonStyle {
             .background(palette.accent, in: RoundedRectangle(cornerRadius: Radius.card))
             .scaleEffect(configuration.isPressed ? 0.96 : 1)
             .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
+    }
+}
+
+/// The quieter second action: a full-width row, not a toolbar item, because
+/// toolbar items stop scaling at the largest text sizes.
+struct Secondary: ButtonStyle {
+    let palette: Palette
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(Type.bodyFont())
+            .foregroundStyle(palette.textPrimary)
+            .frame(maxWidth: .infinity, minHeight: Target.standard)
+            .background(palette.raised, in: RoundedRectangle(cornerRadius: Radius.card))
+            .contentShape(Rectangle())
+            .opacity(configuration.isPressed ? 0.8 : 1)
     }
 }

@@ -16,6 +16,7 @@ enum SnagBundle {
 
     static func hex(_ bytes: [UInt8]) -> String { bytes.map { String(format: "%02x", $0) }.joined() }
     static func sha256(_ data: Data) -> [UInt8] { Array(SHA256.hash(data: data)) }
+    static func photoURL(in dir: URL, hash: [UInt8]) -> URL { dir.appendingPathComponent(photosDir).appendingPathComponent(hex(hash) + ".jpg") }
 
     /// Write a sealed bundle. Photographs are copied in by hash; a missing one
     /// is an error, because a report whose photograph cannot be shown is not

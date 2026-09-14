@@ -20,7 +20,7 @@ final class WalkTests: XCTestCase {
     func testTheWalkStartsAndTwoRoomsAreAddedAtBothSizes() throws {
         for size in ["UICTContentSizeCategoryL", "UICTContentSizeCategoryAccessibilityXXXL"] {
             let app = XCUIApplication()
-            app.launchArguments = ["-now", "1789000000", "-UIPreferredContentSizeCategoryName", size]
+            app.launchArguments = ["-now", "1789000000", "-freshStore", "-UIPreferredContentSizeCategoryName", size]
             app.launch()
             XCTAssertTrue(app.staticTexts["Start with the flat you're standing in."].waitForExistence(timeout: 5), "empty state at \(size)")
             try audit(app, "empty \(size)")
@@ -38,12 +38,12 @@ final class WalkTests: XCTestCase {
             XCTAssertTrue(app.buttons["Kitchen"].waitForExistence(timeout: 3))
             try audit(app, "add room \(size)")
             app.buttons["Kitchen"].tap()
-            app.buttons["Add a room"].firstMatch.tap()
+            app.buttons["addRoomConfirm"].tap()
             XCTAssertTrue(app.staticTexts["Kitchen"].waitForExistence(timeout: 3))
             app.buttons["Add a room"].tap()
             XCTAssertTrue(app.buttons["Bedroom"].waitForExistence(timeout: 3))
             app.buttons["Bedroom"].tap()
-            app.buttons["Add a room"].firstMatch.tap()
+            app.buttons["addRoomConfirm"].tap()
             XCTAssertTrue(app.staticTexts["Bedroom"].waitForExistence(timeout: 3))
             XCTAssertTrue(app.navigationBars["2 rooms"].exists, "the title counts the rooms")
             XCTAssertEqual(app.staticTexts.matching(identifier: "photographed").count, 2, "every room carries its tier")
@@ -55,7 +55,7 @@ final class WalkTests: XCTestCase {
     @MainActor
     func testTheSplashSweepsWithReduceMotion() {
         let app = XCUIApplication()
-        app.launchArguments = ["-reduceMotion"]
+        app.launchArguments = ["-reduceMotion", "-freshStore"]
         app.launch()
         XCTAssertTrue(app.buttons["New report"].waitForExistence(timeout: 5), "the splash never swept with Reduce Motion on")
     }

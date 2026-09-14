@@ -21,6 +21,23 @@
 	<dict><key>UIColorName</key><string>LaunchGround</string></dict>
 	<key>UISupportedInterfaceOrientations</key>
 	<array><string>UIInterfaceOrientationPortrait</string></array>
+	<!-- A sealed bundle is a directory package; declaring it lets another
+	     phone open one in Snag and see the verdict. -->
+	<key>UTExportedTypeDeclarations</key>
+	<array><dict>
+		<key>UTTypeIdentifier</key><string>ng.snag.report</string>
+		<key>UTTypeDescription</key><string>Snag sealed report</string>
+		<key>UTTypeConformsTo</key><array><string>com.apple.package</string></array>
+		<key>UTTypeTagSpecification</key><dict><key>public.filename-extension</key><array><string>snag</string></array></dict>
+	</dict></array>
+	<key>CFBundleDocumentTypes</key>
+	<array><dict>
+		<key>CFBundleTypeName</key><string>Snag sealed report</string>
+		<key>LSItemContentTypes</key><array><string>ng.snag.report</string></array>
+		<key>LSHandlerRank</key><string>Owner</string>
+		<key>LSTypeIsPackage</key><true/>
+	</dict></array>
+	<key>LSSupportsOpeningDocumentsInPlace</key><false/>
 	<key>UIApplicationSceneManifest</key>
 	<dict><key>UIApplicationSupportsMultipleScenes</key><false/></dict>
 </dict>
