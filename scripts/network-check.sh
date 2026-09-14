@@ -17,5 +17,12 @@ if [ -n "$hits" ]; then
   printf '%s✗%s the app has a network path, and the product says it does not:\n%s\n' "$RED" "$OFF" "$hits"
   exit 1
 fi
+# CloudKit is the one exception, and only in Snag/Cloud: the tenant's own
+# iCloud, private database, opt-in — ADR-0005. Anywhere else it is a leak.
+leak=$(grep -rln 'import CloudKit' --include='*.swift' Snag SnagShared SnagWidgets SnagDomain/Sources 2>/dev/null | grep -v '^Snag/Cloud/' || true)
+if [ -n "$leak" ]; then
+  printf '%s✗%s CloudKit imported outside Snag/Cloud:\n%s\n' "$RED" "$OFF" "$leak"
+  exit 1
+fi
 n=$(find Snag SnagShared SnagWidgets SnagDomain/Sources -name '*.swift' | wc -l | tr -d ' ')
-printf '%s✓%s no network path in %s source files — nothing leaves the device\n' "$GRN" "$OFF" "$n"
+printf '%s✓%s no network path in %s source files — nothing leaves the device but through the share sheet, or to the tenant'"'"'s own iCloud from Snag/Cloud\n' "$GRN" "$OFF" "$n"

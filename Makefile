@@ -29,10 +29,10 @@ help: ## Show this help
 # --- the gate ---------------------------------------------------------------
 
 .PHONY: ci
-ci: doc-check design-check counts-check copy-check network-check splash-check verify-check analyze test coverage-gate ## Everything CI runs
+ci: doc-check design-check counts-check copy-check l10n-check network-check splash-check verify-check analyze test coverage-gate ## Everything CI runs
 
 .PHONY: gates
-gates: doc-check design-check counts-check copy-check network-check splash-check verify-check coverage-gate ## The blocking gates alone. These never go yellow.
+gates: doc-check design-check counts-check copy-check l10n-check network-check splash-check verify-check coverage-gate ## The blocking gates alone. These never go yellow.
 
 .PHONY: doc-check
 doc-check: ## Verify the documentation is present, well-formed and current
@@ -57,6 +57,10 @@ network-check: ## Fail if the app has a network path
 .PHONY: splash-check
 splash-check: ## Fail if the launch screen, icon or mark are not what the palette says
 	@python3 scripts/splash-check.py
+
+.PHONY: l10n-check
+l10n-check: ## Fail if any language is missing a string the app has, or carries one it no longer has
+	@python3 scripts/l10n-check.py
 
 .PHONY: verify-check
 verify-check: ## Fail if the Python verifier disagrees with the app's bundle, or fails to fire on a tampered one
@@ -104,12 +108,26 @@ test-domain: ## The domain package's tests, on macOS, in seconds
 .PHONY: test-app
 test-app: ## The app's unit and UI tests on the simulator
 	@[ -n "$(SIM)" ] || { echo "\033[0;33m!\033[0m no simulator found:  make test-app SIM=<udid>"; exit 64; }
-	@# Booted and settled first. Left to xcodebuild, the host app is launched
-	@# into a simulator still coming up and, one run in three, XCTest reports
-	@# "the test runner hung before establishing connection".
+	@# Built first, then the unit bundle, then the UI bundle. The unit bundle
+	@# is hosted in the app, and one launch in three the host never reports
+	@# to XCTest ("the test runner hung before establishing connection") —
+	@# with or without a rebuild, a cold boot, or our scene delegate, each of
+	@# which was blamed in turn. It is retried up to three times; the UI
+	@# runner, a process of its own, has never hung. A hang is not a failed
+	@# test: the retry starts from zero, and the summary counts the run that ran.
 	@xcrun simctl boot $(SIM) >/dev/null 2>&1 || true; xcrun simctl bootstatus $(SIM) -b >/dev/null 2>&1 || true
-	xcodebuild test -project $(PROJECT) -scheme $(SCHEME) -destination "$(DEST)" \
-	  -derivedDataPath $(DERIVED) -quiet; rc=$$?; \
+	rm -rf $(DERIVED)/Logs/Test/*.xcresult
+	xcodebuild build-for-testing -project $(PROJECT) -scheme $(SCHEME) -destination "$(DEST)" \
+	  -derivedDataPath $(DERIVED) -quiet
+	@rc=1; for attempt in 1 2 3; do \
+	  rm -rf $(DERIVED)/Logs/Test/*.xcresult; \
+	  xcodebuild test-without-building -project $(PROJECT) -scheme $(SCHEME) -destination "$(DEST)" \
+	    -derivedDataPath $(DERIVED) -only-testing:SnagTests -quiet > $(DERIVED)/unit.log 2>&1; rc=$$?; \
+	  if grep -q 'hung before establishing connection' $(DERIVED)/unit.log; then \
+	    echo "\033[0;33m!\033[0m the unit-test host hung on attempt $$attempt; again"; xcrun simctl terminate $(SIM) ng.snag.app >/dev/null 2>&1; continue; fi; \
+	  grep -vE 'IDELaunchParametersSnapshot|IDETestOperationsObserverDebug' $(DERIVED)/unit.log; break; done; \
+	  [ $$rc -eq 0 ] && { xcodebuild test-without-building -project $(PROJECT) -scheme $(SCHEME) -destination "$(DEST)" \
+	  -derivedDataPath $(DERIVED) -only-testing:SnagUITests -quiet; rc=$$?; }; \
 	  xcrun simctl terminate $(SIM) ng.snag.app >/dev/null 2>&1; \
 	  case "$$(xcrun simctl list devices | grep $(SIM))" in *"Snag Tests"*) xcrun simctl shutdown $(SIM) >/dev/null 2>&1;; esac; \
 	  exit $$rc

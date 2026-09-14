@@ -35,7 +35,7 @@ The last clause is the one that matters. Every signature this app will ever
 make is over that encoding. If it changes by one byte between versions, every
 report ever signed becomes *altered*. The fixture is the promise.
 
-## Phase 1 — The report · **current**
+## Phase 1 — The report · *cleared 2026-09-14*
 
 The photographs tier, which works on every iPhone: rooms named, items
 photographed and described, each photograph hashed the moment it is taken. The
@@ -96,7 +96,7 @@ before the next starts.
     and run in CI against a synthetic bundle — the proof that the format
     document is enough.
 
-## Phase 2 — Measured
+## Phase 2 — Measured · **current**
 
 The ARKit tier: floor dimensions and area for each room, on any iPhone with an
 A12 or later, measured by the tenant tapping corners. Every number in the
@@ -108,6 +108,14 @@ cent of a tape measure, and the report names the tier beside every number.*
 
 ARKit does not run in a simulator, so this gate needs a handset and stays open
 until one has been watched — R1 in the release ledger.
+
+**Built 2026-09-14, short of the sensor.** `Floor` in the domain turns corners
+into width, length and area at the centimetre, with the tier, and a room takes
+a measurement but never a lower tier over a higher one — property-tested.
+`MeasureView` runs ARKit plane detection and raycasts each tap onto the floor
+on a phone; on the simulator the same screen takes the fixture room's four
+uneven taps. `TierTests` walks it to a seal. What remains is the sentence
+above: a tape measure, a real room, five per cent.
 
 ## Phase 3 — Scanned
 
@@ -122,6 +130,16 @@ phone without LiDAR gets the Phase 2 report with no missing feature named.*
 Needs a LiDAR handset — R2. The last clause is the honest version of a Pro
 feature: a phone that cannot scan is told nothing is missing, because for that
 tenant nothing is.
+
+**Built 2026-09-14, short of the sensor.** `ScanView` runs RoomPlan's own
+capture on a LiDAR phone and, when the room closes, projects the floor
+polygon, the walls, the doors and the windows onto the floor plane as a
+`ScannedFloor`; the simulator gets the fixture room. `PlanRenderer` draws the
+plan — walls, openings, two dimensions, a metre bar — as a JPEG that goes into
+the bundle by its hash as `planHash`, which both verifiers check; the PDF
+draws it on the room's page. A scan outranks a measurement and a tap cannot
+overwrite a scan. The last clause of the gate is already true: a phone with
+neither sensor sees no button, and its report is complete.
 
 ## Phase 4 — Handover, and v1.0
 
@@ -169,10 +187,18 @@ photograph-only tier and upgraded with a scan later, both signatures kept.
 photographed to scanned with both signatures verifying, and the app in five
 languages.*
 
+**Built 2026-09-14, short of the readers.** The four languages, chosen in
+the app and gated for completeness and for overclaiming, with the English
+kept above the translation on the PDF; the amendment layer, a second
+signature beside the first that may add numbers and plans and nothing else,
+checked by both verifiers; and the tenant's own iCloud, opt-in, verified on
+the way down, proved with a store in memory. [ADR-0005](adr/0005-v1-1-five-languages-an-amendment-layer-and-the-tenants-own-icloud.md).
+What the gate still waits for: four native speakers (R5) and a signed-in
+phone for CloudKit (with R1's handset).
+
 ### The thirty, part three — the agent with five flats
 
-*Built 2026-09-14, ahead of this phase, for the same reason. The languages
-and the iCloud sync that make the phase are not among them.*
+*Built 2026-09-14, ahead of this phase.*
 
 25. **Find a report.** Search by address, sort by date, drafts and sealed apart.
 26. **The app lock.** Face ID or the passcode to open Snag; off by default.

@@ -167,6 +167,29 @@ def decode_report(b):
     return {"kind": kind, "address": address, "createdAt": created, "movedIn": moved_in, "rooms": rooms}
 
 
+def decode_amendment(b):
+    r = Reader(b)
+    if r.u8() != 1:
+        raise ValueError("version")
+    original, at = r.hash(), r.i64()
+    return {"originalId": original, "amendedAt": at, "report": decode_report(bytes(b[41:]))}
+
+
+def amends_only_numbers(amended, original):
+    if (amended["kind"], amended["address"], amended["createdAt"], amended["movedIn"]) != \
+       (original["kind"], original["address"], original["createdAt"], original["movedIn"]):
+        return False
+    if len(amended["rooms"]) != len(original["rooms"]):
+        return False
+    for a, b in zip(amended["rooms"], original["rooms"]):
+        if a["name"] != b["name"] or a["custom"] != b["custom"] or a["items"] != b["items"]:
+            return False
+        tier = lambda room: max([d[1] for d in room["dims"] if d] or [0])
+        if tier(a) < tier(b):
+            return False
+    return True
+
+
 def decode_countersign(b):
     r = Reader(b)
     if r.u8() != 1:
@@ -213,8 +236,28 @@ def verify(files):
         report = decode_report(files["report.bin"])
     except (ValueError, UnicodeDecodeError, struct.error):
         return "altered: report decoding"
+    # The amendment layer: same key, the original's id, numbers only.
+    current = report
+    if "amendment.bin" in files or "amendment.sig" in files:
+        if "amendment.bin" not in files or "amendment.sig" not in files:
+            return "altered: amendment incomplete"
+        try:
+            ar, as_ = parse_der(files["amendment.sig"])
+        except (ValueError, IndexError):
+            return "altered: amendment encoding"
+        if not ecdsa_verify(pub, hashlib.sha256(files["amendment.bin"]).digest(), ar, as_):
+            return "altered: amendment signature"
+        try:
+            amendment = decode_amendment(files["amendment.bin"])
+        except (ValueError, UnicodeDecodeError, struct.error):
+            return "altered: amendment decoding"
+        if amendment["originalId"] != hashlib.sha256(files["report.bin"]).digest():
+            return "altered: amendment names another report"
+        if not amends_only_numbers(amendment["report"], report):
+            return "altered: amendment changes more than numbers"
+        current = amendment["report"]
     named = set()
-    for room in report["rooms"]:
+    for room in report["rooms"] + current["rooms"]:
         for item in room["items"]:
             named.add(item["photo"])
         if room["plan"]:

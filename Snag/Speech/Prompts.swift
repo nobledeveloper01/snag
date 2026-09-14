@@ -6,9 +6,9 @@
 import SnagDomain
 
 enum Prompts {
-    static let meter = "Prepaid meter"
-    static let waterMeter = "Water meter"
-    static let keys = "Keys"
+    static var meter: String { t("Prepaid meter") }
+    static var waterMeter: String { t("Water meter") }
+    static var keys: String { t("Keys") }
 
     static func forRoom(_ name: RoomName) -> [String] {
         let own: [String] = switch name {
@@ -22,7 +22,7 @@ enum Prompts {
         case .store: ["Shelves", "Door", "Damp"]
         case .other: []
         }
-        return own + [meter, waterMeter, keys]
+        return own.map(t) + [meter, waterMeter, keys]
     }
 
     /// The prompts that ask for a number, and what the number is.

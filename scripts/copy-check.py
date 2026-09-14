@@ -19,6 +19,7 @@ GREEN, RED, RESET = "\033[0;32m", "\033[0;31m", "\033[0m"
 SOURCES = [
     ROOT / "Snag" / "Speech" / "Strings.swift",
     ROOT / "Snag" / "Speech" / "Prompts.swift",
+    *sorted((ROOT / "Snag" / "Speech" / "Translations").glob("*.swift")),
     ROOT / "Snag" / "Report" / "ReportText.swift",
     ROOT / "Config" / "Info.plist",
     ROOT / "docs" / "APPSTORE.md",

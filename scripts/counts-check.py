@@ -36,10 +36,27 @@ def main() -> int:
     ledger = (ROOT / "docs/RELEASE-GATES.md").read_text()
     blocking = ledger[ledger.index("## Blocks v1.0"):ledger.index("## Cleared")]
     gates = len(re.findall(r"^\| R\d+ \|", blocking, re.MULTILINE))
+    # The README's numbers line: tests, languages, ADRs, screenshots — counted, not typed.
+    domain_tests = sum(len(re.findall(r"@Test\(", f.read_text())) for f in (ROOT / "SnagDomain/Tests").rglob("*.swift"))
+    unit_tests = sum(len(re.findall(r"func test", f.read_text())) for f in (ROOT / "SnagTests").glob("*.swift"))
+    ui_tests = sum(len(re.findall(r"func test", f.read_text())) for f in (ROOT / "SnagUITests").glob("*.swift"))
+    strings = len(re.findall(r'^\s*"((?:[^"\\]|\\.)*)":\s*"', (ROOT / "Snag/Speech/Translations/Pidgin.swift").read_text(), re.MULTILINE))
+    # `case english = "en", pidgin = "pcm", ...` — one enum, every case with a code.
+    languages = len(re.findall(r'\w+ = "[a-z]{2,3}"', (ROOT / "Snag/Speech/L10n.swift").read_text()))
+    adrs = len(list((ROOT / "docs/adr").glob("[0-9]*.md")))
+    shots = len(list((ROOT / "docs/screenshots").glob("*.png")))
     claims = [
         ("README.md", r"## (\w+) tiers", tiers),
         ("README.md", r"(\w+) gates, in \[`docs/RELEASE-GATES.md`", gates),
         ("docs/ROADMAP.md", r"the (\w+) tiers a number can come from", tiers),
+        ("README.md", r"\*\*The numbers\.\*\* (\d+) domain tests", domain_tests),
+        ("README.md", r"· (\d+) app unit tests", unit_tests),
+        ("README.md", r"· (\d+) UI tests", ui_tests),
+        ("README.md", r"· (\d+) strings in (?:\w+) languages", strings),
+        ("README.md", r"strings in (\w+) languages", languages),
+        ("README.md", r"· (\d+) ADRs", adrs),
+        ("README.md", r"· (\d+) release gates", gates),
+        ("README.md", r"· (\d+) screenshots", shots),
     ]
     failures, checked = [], 0
     for rel, pattern, expected in claims:

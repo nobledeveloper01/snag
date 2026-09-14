@@ -12,6 +12,8 @@ struct RootView: View {
             try? FileManager.default.removeItem(at: root)
             UserDefaults.standard.removeObject(forKey: "resume.draft")
             UserDefaults.standard.removeObject(forKey: "pref.lock")
+            UserDefaults.standard.removeObject(forKey: "pref.language")
+            L10n.language = .english
         }
 
         return ReportStore()
@@ -37,5 +39,6 @@ struct RootView: View {
             }
         }
         .animation(.easeOut(duration: 0.25), value: swept)
+
     }
 }

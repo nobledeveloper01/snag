@@ -10,6 +10,30 @@ Entries say *why*, not just what.
 
 ### Added
 
+- **v1.1, short of the readers.** Five languages — English, Naijá, Yorùbá,
+  Hausa, Igbo — chosen in Settings and not by the phone, 203 strings each,
+  `make l10n-check` failing on any one missing and `make copy-check` reading
+  every translation; the PDF keeps the English above the translation. The
+  amendment layer: a sealed report measured or scanned later as a second
+  signed layer beside the first, numbers and plans only, both verifiers
+  refusing anything else; `Measure or scan later` on the sealed screen. The
+  tenant's own iCloud: private CloudKit, opt-in, one file per bundle, each
+  verified before it is kept, proved against a store in memory. ADR-0005.
+  The release ledger gains R5, a native speaker per language.
+- **Phases 2 and 3, short of the sensors.** The measured tier: `Floor` in
+  the domain turns tapped corners into width, length and area at the
+  centimetre with their tier, property-tested; `MeasureView` raycasts each
+  tap onto ARKit's floor plane on a phone. The scanned tier: `ScanView`
+  runs RoomPlan on a LiDAR phone and projects the floor, walls, doors and
+  windows onto the floor plane; `PlanRenderer` draws the plan as a JPEG
+  that goes into the bundle by its hash and onto the room's PDF page. A
+  scan outranks a measurement; a tap cannot overwrite a scan; a phone with
+  neither sensor sees no button. On the simulator a fixture room stands in
+  for both sensors, and `TierTests` walks it to a seal. The exit gates — a
+  tape measure in a real room — wait on handsets, R1 and R2.
+- **The viewfinder.** On a phone the shutter opens a live preview with the
+  torch beside it before a photograph is taken; the simulator's fixture
+  path is unchanged.
 - **Phase 1, the report.** Photographs hashed the moment they arrive and
   stored by hash; items with a caption and *snag* or *fine*; a review; a
   seal by a P-256 key in the Secure Enclave or, failing one, the Keychain;

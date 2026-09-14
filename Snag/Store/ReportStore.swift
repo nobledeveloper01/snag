@@ -17,8 +17,9 @@ final class ReportStore {
     struct Sealed: Identifiable, Equatable {
         let id: String            // the report id: hex of the digest
         let url: URL
-        let report: Report
+        var report: Report
         var counter: CounterSignature?
+        var amendment: Amendment?
         var idBytes: [UInt8] { stride(from: 0, to: id.count, by: 2).compactMap { i in UInt8(id[id.index(id.startIndex, offsetBy: i)..<id.index(id.startIndex, offsetBy: i + 2)], radix: 16) } }
     }
 
@@ -70,7 +71,9 @@ final class ReportStore {
                   let data = try? Data(contentsOf: url.appendingPathComponent(SnagBundle.reportFile)),
                   let r = try? Canonical.report(from: Array(data)) else { return nil }
             let counter = (try? Data(contentsOf: url.appendingPathComponent(SnagBundle.counterFile))).flatMap { try? Canonical.counterSignature(from: Array($0)) }
-            return Sealed(id: String(name.dropLast(5)), url: url, report: r, counter: counter)
+            let amendment = Verifier.amendment(in: url)
+            // The report shown is the amended one where there is an amendment.
+            return Sealed(id: String(name.dropLast(5)), url: url, report: amendment?.report ?? r, counter: counter, amendment: amendment)
         }
     }
 
@@ -150,6 +153,19 @@ final class ReportStore {
         try SnagBundle.writeCounterSignature(bytes, seal: try sealer.seal(bytes), signature: image, to: s.url)
         var updated = s
         updated.counter = c
+        if let i = sealed.firstIndex(where: { $0.id == s.id }) { sealed[i] = updated }
+        return updated
+    }
+
+    /// Measured or scanned after the seal: the amended report as a second
+    /// signed layer, the new plans into the bundle, the original untouched.
+    func amend(_ s: Sealed, with report: Report, plans: [([UInt8], URL)], sealer: Sealer, now: Int64) throws -> Sealed {
+        let a = Amendment(originalId: s.idBytes, amendedAt: now, report: report)
+        let bytes = try Canonical.bytes(of: a)
+        try SnagBundle.writeAmendment(bytes, seal: try sealer.seal(bytes), photos: plans, to: s.url)
+        var updated = s
+        updated.report = report
+        updated.amendment = a
         if let i = sealed.firstIndex(where: { $0.id == s.id }) { sealed[i] = updated }
         return updated
     }

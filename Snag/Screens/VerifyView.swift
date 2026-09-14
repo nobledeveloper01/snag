@@ -26,6 +26,9 @@ struct VerifyView: View {
                         if let counter {
                             Text("\(Strings.counterSigned) \(counter.name), \(Dates.short(counter.signedAt))").font(Type.secondaryFont()).foregroundStyle(palette.textSecondary)
                         }
+                        if let a = dir.flatMap({ Verifier.amendment(in: $0) }) {
+                            Text("\(Strings.amendedOn) \(Dates.short(a.amendedAt))").font(Type.secondaryFont()).foregroundStyle(palette.textSecondary)
+                        }
                     }
                     // Compare two bundles: the opened move-out against the
                     // move-in this phone holds — on any phone that holds it.

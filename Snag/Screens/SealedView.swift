@@ -13,6 +13,7 @@ struct SealedView: View {
     @State private var zip: URL?
     @State private var signing = false
     @State private var reminding = false
+    @State private var amending = false
     @State private var current: ReportStore.Sealed
 
     init(store: ReportStore, sealed: ReportStore.Sealed) {
@@ -21,7 +22,7 @@ struct SealedView: View {
 
     var body: some View {
         let palette = Palette.current(scheme)
-        let r = sealed.report
+        let r = current.report
         ZStack {
             LinearGradient(colors: palette.canvas, startPoint: .top, endPoint: .bottom).ignoresSafeArea()
             List {
@@ -52,6 +53,14 @@ struct SealedView: View {
                     }
                     if r.kind == .moveIn {
                         Button(Strings.remind) { reminding = true }.buttonStyle(Secondary(palette: palette))
+                    }
+                    // Numbers later, on a phone with the sensor — or the fixture.
+                    if let a = current.amendment {
+                        Text("\(Strings.amendedOn) \(Dates.short(a.amendedAt))").font(Type.secondaryFont()).foregroundStyle(palette.textSecondary)
+                            .frame(minHeight: Target.standard).accessibilityIdentifier("amended")
+                    }
+                    if (Sensors.canMeasure || Sensors.canScan || Sensors.fixtures), current.report.tier != .scanned {
+                        Button(Strings.amend) { amending = true }.buttonStyle(Secondary(palette: palette))
                     }
                 }
                 if let movedIn = store.movedIn(for: r) {
@@ -95,6 +104,13 @@ struct SealedView: View {
             }
         }
         .sheet(isPresented: $reminding) { RemindView(address: r.address) }
+        .sheet(isPresented: $amending) {
+            AmendView(store: store, sealed: current) { updated in
+                current = updated
+                verdict = Verifier.verify(updated.url)
+                render()
+            }
+        }
         .task {
             // `-tamper` flips one byte of the signed bytes before the verifier
             // runs. It exists so the UI test can see the word "Altered" on a

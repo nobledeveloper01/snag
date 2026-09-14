@@ -44,10 +44,24 @@ enum Verifier {
         guard key.isValidSignature(sig, for: digest) else { return .altered("report signature") }
         guard let report = try? Canonical.report(from: Array(reportData)) else { return .altered("report decoding") }
 
-        // Every photograph the report names must be present and hash to its name.
+        // The amendment layer, if present: the same key, the original's id,
+        // and a report that changes only the rooms' numbers. The report shown
+        // is then the amended one; the original's seal stands underneath.
+        var current = report
+        if let aData = try? Data(contentsOf: dir.appendingPathComponent(SnagBundle.amendmentFile)) {
+            guard let aSigData = try? Data(contentsOf: dir.appendingPathComponent(SnagBundle.amendmentSigFile)),
+                  let aSig = try? P256.Signing.ECDSASignature(derRepresentation: aSigData),
+                  key.isValidSignature(aSig, for: SHA256.hash(data: aData)) else { return .altered("amendment signature") }
+            guard let a = try? Canonical.amendment(from: Array(aData)) else { return .altered("amendment decoding") }
+            guard a.originalId == Array(digest) else { return .altered("amendment is for another report") }
+            guard a.report.amendsOnlyNumbers(of: report) else { return .altered("amendment changes more than numbers") }
+            current = a.report
+        }
+
+        // Every photograph either report names must be present and hash to its name.
         let photos = dir.appendingPathComponent(SnagBundle.photosDir)
         var named: Set<String> = []
-        for room in report.rooms {
+        for room in report.rooms + current.rooms {
             for item in room.items { named.insert(SnagBundle.hex(item.photoHash)) }
             if let plan = room.planHash { named.insert(SnagBundle.hex(plan)) }
         }
@@ -72,6 +86,11 @@ enum Verifier {
             guard SnagBundle.sha256(image) == c.signatureHash else { return .altered("signature image") }
             counter = c
         }
-        return .unaltered(report, counter)
+        return .unaltered(current, counter)
+    }
+
+    /// The amendment layer alone, decoded, for the screens that say when.
+    static func amendment(in dir: URL) -> Amendment? {
+        (try? Data(contentsOf: dir.appendingPathComponent(SnagBundle.amendmentFile))).flatMap { try? Canonical.amendment(from: Array($0)) }
     }
 }

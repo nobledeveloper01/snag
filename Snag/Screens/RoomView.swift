@@ -17,6 +17,9 @@ struct RoomView: View {
     @State private var busy = false
     @State private var duplicate = false
     @State private var torchOn = false
+    @State private var measuring = false
+    @State private var viewfinder: String??   // nil: closed; .some(prompt): open with that prompt
+    @State private var scanning = false
 
     struct Pending: Identifiable { let id = UUID(); let hash: [UInt8]; let image: UIImage?; let prompt: String?; let issues: [Photo.Issue] }
 
@@ -30,6 +33,17 @@ struct RoomView: View {
             LinearGradient(colors: palette.canvas, startPoint: .top, endPoint: .bottom).ignoresSafeArea()
             if let room {
                 List {
+                    // The room's numbers, with the word for how they were made.
+                    if let w = room.width, let l = room.length, let a = room.area {
+                        HStack {
+                            Text(Dimensions.line(w, l, a)).font(Type.bodyFont()).foregroundStyle(palette.textPrimary)
+                            Spacer()
+                            TierChip(tier: room.tier, palette: palette)
+                        }
+                        .frame(minHeight: Target.standard)
+                        .accessibilityElement(children: .combine)
+                        .accessibilityIdentifier("roomDimensions")
+                    }
                     if room.items.isEmpty {
                         Text(Strings.roomEmptyHint).font(Type.bodyFont()).foregroundStyle(palette.textSecondary)
                             .frame(minHeight: Target.standard)
@@ -67,6 +81,25 @@ struct RoomView: View {
                     .background(palette.raised, in: RoundedRectangle(cornerRadius: Radius.card))
                     .padding(.horizontal, Gap.l)
                     .accessibilityIdentifier("duplicate")
+                }
+                // The measured and scanned tiers, where the phone has the sensor —
+                // or the fixture, on the simulator. A phone with neither sees
+                // nothing here, because for that tenant nothing is missing.
+                if Sensors.canMeasure || Sensors.canScan || Sensors.fixtures {
+                    // Chips in a strip, like the prompts: two long labels side by
+                    // side clip at the largest text sizes, and a strip scrolls.
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: Gap.s) {
+                            if Sensors.canMeasure || Sensors.fixtures {
+                                Button(Strings.measureRoom) { measuring = true }.buttonStyle(Chip(palette: palette))
+                                    .disabled((room?.tier ?? .photographed) == .scanned)
+                            }
+                            if Sensors.canScan || Sensors.fixtures {
+                                Button(Strings.scanRoom) { scanning = true }.buttonStyle(Chip(palette: palette))
+                            }
+                        }
+                        .padding(.horizontal, Gap.l)
+                    }
                 }
                 // Shoot the same view: on a move-out walk, the move-in's
                 // photographs of this room, each a tap away from its retake.
@@ -154,6 +187,32 @@ struct RoomView: View {
                 pending = nil
             }
         }
+        .fullScreenCover(isPresented: Binding(get: { viewfinder != nil }, set: { if !$0 { viewfinder = nil } })) {
+            if let camera = source as? CameraPhotos {
+                CaptureView(camera: camera, prompt: viewfinder ?? nil) { data in
+                    let prompt = viewfinder ?? nil
+                    Task { await took(data, prompt: prompt) }
+                }
+            }
+        }
+        .sheet(isPresented: $measuring) {
+            MeasureView { corners in
+                guard var d = draft else { return }
+                if d.report.rooms[roomIndex].measure(corners, tier: .measured) { store.update(d); Haptics.captured() }
+            }
+        }
+        .sheet(isPresented: $scanning) {
+            ScanView { floor in
+                guard var d = draft else { return }
+                if d.report.rooms[roomIndex].measure(floor.corners, tier: .scanned) {
+                    // The plan is a photograph of the floor: hashed, kept by hash, named in the report.
+                    if let jpeg = PlanRenderer.jpeg(floor, label: d.report.roomLabels[roomIndex].sentenceCased) {
+                        d.report.rooms[roomIndex].planHash = store.store(photo: jpeg, in: d)
+                    }
+                    store.update(d); Haptics.captured()
+                }
+            }
+        }
         .sheet(item: $editing) { i in
             if let room, i < room.items.count {
                 let item = room.items[i]
@@ -181,12 +240,21 @@ struct RoomView: View {
     }
 
     private func shoot(prompt: String?) async {
+        guard !busy else { return }
+        // A real camera gets a viewfinder first; the fixture has nothing to frame.
+        if source is CameraPhotos { viewfinder = .some(prompt); return }
+        guard let raw = await source.capture() else { return }
+        await took(raw, prompt: prompt)
+    }
+
+    /// What happens to the bytes whichever way they arrived.
+    private func took(_ raw: Data, prompt: String?) async {
         guard let draft, !busy else { return }
         busy = true
         defer { busy = false }
         // The metadata comes off before anything else sees the bytes: what
         // is hashed and kept is the picture and nothing but the picture.
-        guard let raw = await source.capture(), let data = Photo.strip(raw) else { return }
+        guard let data = Photo.strip(raw) else { return }
         let hash = SnagBundle.sha256(data)
         // One photograph is one item: the same bytes are refused before they
         // are written, so the draft never holds two claims about one moment.

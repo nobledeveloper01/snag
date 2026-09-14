@@ -20,7 +20,7 @@ enum ReportPDF {
     static func write(_ sealed: ReportStore.Sealed, publicKey: [UInt8], movedIn: Report? = nil) throws -> URL {
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("Snag-\(sealed.id.prefix(12)).pdf")
         let signature = sealed.counter.map { c in (c, UIImage(contentsOfFile: sealed.url.appendingPathComponent(SnagBundle.signatureImage).path)) }
-        try render(sealed.report, id: sealed.id, publicKey: publicKey, movedIn: movedIn, signature: signature,
+        try render(sealed.report, id: sealed.id, publicKey: publicKey, movedIn: movedIn, signature: signature, amendedAt: sealed.amendment?.amendedAt,
                    photos: { SnagBundle.photoURL(in: sealed.url, hash: $0) }).write(to: url)
         return url
     }
@@ -32,13 +32,13 @@ enum ReportPDF {
         "snag:1:\(id):\(SnagBundle.hex(Array(SnagBundle.sha256(Data(publicKey)).prefix(8))))"
     }
 
-    static func render(_ r: Report, id: String, publicKey: [UInt8], movedIn: Report? = nil, signature: (CounterSignature, UIImage?)? = nil, photos: (Hash) -> URL) -> Data {
+    static func render(_ r: Report, id: String, publicKey: [UInt8], movedIn: Report? = nil, signature: (CounterSignature, UIImage?)? = nil, amendedAt: Int64? = nil, photos: (Hash) -> URL) -> Data {
         // Two passes: the first counts pages so the second can print "of N".
-        let count = draw(r, id: id, publicKey: publicKey, movedIn: movedIn, signature: signature, photos: photos, total: nil).pages
-        return draw(r, id: id, publicKey: publicKey, movedIn: movedIn, signature: signature, photos: photos, total: count).data
+        let count = draw(r, id: id, publicKey: publicKey, movedIn: movedIn, signature: signature, amendedAt: amendedAt, photos: photos, total: nil).pages
+        return draw(r, id: id, publicKey: publicKey, movedIn: movedIn, signature: signature, amendedAt: amendedAt, photos: photos, total: count).data
     }
 
-    private static func draw(_ r: Report, id: String, publicKey: [UInt8], movedIn: Report?, signature: (CounterSignature, UIImage?)?, photos: (Hash) -> URL, total: Int?) -> (data: Data, pages: Int) {
+    private static func draw(_ r: Report, id: String, publicKey: [UInt8], movedIn: Report?, signature: (CounterSignature, UIImage?)?, amendedAt: Int64?, photos: (Hash) -> URL, total: Int?) -> (data: Data, pages: Int) {
         let renderer = UIGraphicsPDFRenderer(bounds: page)
         var pages = 0
         let labels = r.roomLabels
@@ -58,6 +58,9 @@ enum ReportPDF {
                 y = text("\(Strings.walkedIn) \(minutes) \(Strings.minutes): \(Dates.short(walked.first)) – \(Dates.short(walked.last))", at: y, font: font(11), color: .darkGray)
             }
             y = text("\(r.rooms.count) \(Strings.room.lowercased())s · \(r.itemCount) \(Strings.items) · \(r.snagCount) \(Strings.snags) · \(r.tier.word)", at: y, font: font(11), color: .darkGray)
+            if let amendedAt {
+                y = text("\(Strings.amendedOn) \(Dates.short(amendedAt)) — \(ReportText.amendedNote)", at: y, font: font(10), color: .darkGray)
+            }
             // QR, top right of the cover.
             if let qr = qrImage(qrPayload(id: id, publicKey: publicKey)) {
                 qr.draw(in: CGRect(x: page.width - margin - 96, y: margin, width: 96, height: 96))
@@ -76,8 +79,13 @@ enum ReportPDF {
                 newPage()
                 y = margin
                 y = text("\(labels[i].sentenceCased)  ·  \(room.tier.word)", at: y, font: font(18, .bold))
-                if let w = room.width, let l = room.length {
-                    y = text("\(w.centimetres) × \(l.centimetres) cm · \(w.tier.word)", at: y, font: font(11), color: .darkGray)
+                if let w = room.width, let l = room.length, let a = room.area {
+                    y = text("\(Dimensions.line(w, l, a)) · \(w.tier.word)", at: y, font: font(11), color: .darkGray)
+                }
+                if let plan = room.planHash, let img = UIImage(contentsOfFile: photos(plan).path) {
+                    let box = CGRect(x: margin, y: y + 6, width: 300, height: 225)
+                    img.draw(in: fit(img.size, in: box))
+                    y = text("\(Strings.plan) · \(Tier.scanned.word) · \(SnagBundle.hex(plan).prefix(16))…", at: box.maxY + 4, font: font(9), color: .darkGray)
                 }
                 if room.items.isEmpty { y = text(Strings.noItems, at: y + 8, font: font(11), color: .darkGray) }
                 for item in room.items {
@@ -143,8 +151,14 @@ enum ReportPDF {
             // --- The last page
             newPage()
             y = margin
-            y = text(ReportText.whatThisIs, at: y, font: font(18, .bold))
-            for para in ReportText.whatThisIsBody { y = text(para, at: y + 8, font: font(11)) }
+            y = text("What this report is", at: y, font: font(18, .bold))
+            for para in ReportText.whatThisIsBodyEnglish { y = text(para, at: y + 8, font: font(11)) }
+            // The tenant's language under the English, when it is another:
+            // the English is what was written; the translation is a draft.
+            if L10n.language != .english {
+                y = text(ReportText.whatThisIs, at: y + 16, font: font(14, .semibold))
+                for para in ReportText.whatThisIsBody { y = text(para, at: y + 6, font: font(10), color: .darkGray) }
+            }
             y = text("\(Strings.reportId): \(id)", at: y + 12, font: mono(9), color: .darkGray)
         }
         return (data, pages)

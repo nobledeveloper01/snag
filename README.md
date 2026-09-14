@@ -77,8 +77,9 @@ knows the behaviour of.
 
 ## Status
 
-**Phase 1 of 5 — the report.** A tenant walks the flat room by room, photographs what is
-wrong and what is fine, and seals the report with a key that never leaves the phone. The
+**Phase 2 of 5 — measured, built short of the sensor.** Phase 1 is cleared: a tenant walks
+the flat room by room, photographs what is wrong and what is fine, and seals the report
+with a key that never leaves the phone. The
 sealed bundle verifies itself on screen; one flipped byte and the screen says *Altered*,
 proved by a UI test that flips it. The PDF has one page per room and a last page that says
 what the report is and is not. The bundle format is public, in
@@ -94,6 +95,17 @@ bundle, the counter-signature drawn on glass, the move-out that shoots the same 
 says what changed, the calendar entry, search, the app lock, the seal nudge, backup and
 restore, Siri, and the walk on the Lock Screen. What waits is what always waited: a
 handset, a handover, a lawyer.
+
+The measured and scanned tiers are built too — ARKit corner-tapping and RoomPlan scanning,
+the floor plan drawn into the bundle and the PDF, a scan outranking a measurement — and
+proved on the simulator with a fixture room standing in for the sensors. Their exit gates
+are a tape measure in a real room, which is R1 and R2 in the ledger, and nothing a
+simulator can say.
+
+And v1.1's three, the same day: five languages chosen in the app with the English kept on
+the PDF; a sealed report measured or scanned later as a second signed layer that touches
+nothing the first one signed; and the tenant's own iCloud, opt-in, every bundle verified on
+the way down. [ADR-0005](docs/adr/0005-v1-1-five-languages-an-amendment-layer-and-the-tenants-own-icloud.md).
 
 The pure-Swift domain — a report, its rooms and items, the three tiers, and that encoding
 — lives in a package that imports nothing, not even Foundation, and tests in seconds with
@@ -126,18 +138,34 @@ never told it is missing something, because for that tenant nothing is.
 
 ## What blocks v1.0
 
-Four gates, in [`docs/RELEASE-GATES.md`](docs/RELEASE-GATES.md). Two wait on handsets —
-one ordinary, one with LiDAR — one on a real handover watched in a real doorway, and one on
-a tenancy lawyer reading the PDF for an hour and not asking for a change.
+Five gates, in [`docs/RELEASE-GATES.md`](docs/RELEASE-GATES.md). Two wait on handsets —
+one ordinary, one with LiDAR — one on a real handover watched in a real doorway, one on
+a tenancy lawyer reading the PDF for an hour and not asking for a change, and one on four
+native speakers reading the four translations.
 
 ## Working on it
 
 ```
-make setup      # nothing to install: Xcode 26 and the simulator runtime
-make test       # swift test on the domain package, then xcodebuild test on the simulator
-make ci         # everything CI runs: the gates, analyze, test, coverage
-make phase      # the current phase and its exit gate
+make setup        # nothing to install: Xcode 26 and the simulator runtime
+make test         # swift test on the domain package, then the app's unit and UI tests on a headless simulator
+make ci           # everything CI runs: the gates, analyze, test, coverage
+make gates        # the blocking gates alone, in seconds
+make screenshots  # retake every README screenshot by test
+make phase        # the current phase and its exit gate
 ```
+
+**The gates**, each proved to fire by breaking it on purpose: `doc-check` (every document
+present, tracked and current), `design-check` (DESIGN.md agrees with the tokens; no fixed
+font size), `counts-check` (every figure a document quotes is one the code produces),
+`copy-check` (nothing the app, the PDF, the listing or any translation says claims proof),
+`l10n-check` (every string in every language), `network-check` (no network path; CloudKit
+in one folder only), `splash-check` (the launch screen paints the splash's colour),
+`verify-check` (the Python verifier agrees with the app's own sealed bundle and fires on
+eight tampers), `domain-purity` (the domain imports nothing), `coverage-gate` (the domain
+above 95%), and the app suite on the simulator, which fails on zero tests.
+
+**The numbers.** 24 domain tests · 32 app unit tests · 16 UI tests under the accessibility
+audit (a fixture writer among the first and the screenshot set among the second skip until asked) · 203 strings in five languages · 5 ADRs · 5 release gates · 11 screenshots.
 
 Every phase has a one-sentence exit gate in [`docs/ROADMAP.md`](docs/ROADMAP.md). Every
 non-obvious decision has an ADR in [`docs/adr/`](docs/adr/). Every session has a journal

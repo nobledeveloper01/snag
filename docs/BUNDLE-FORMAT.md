@@ -16,6 +16,10 @@ app that made it, or a network.
   countersign.sig   (optional) ECDSA over SHA-256(countersign.bin), same key
   signature.jpg     (with the above) the drawn signature; its SHA-256 is the
                     counter-signature's signatureHash
+  amendment.bin     (optional) u8 version=1, 32 bytes the original's id,
+                    i64 amendedAt, then the canonical bytes of the amended
+                    report — numbers and plans added after the seal
+  amendment.sig     (with the above) ECDSA over SHA-256(amendment.bin), same key
 ```
 
 The same files travel as one file, `<id>.snagz`: a zip archive of the
@@ -32,7 +36,13 @@ In this order, and the first failure is the answer:
 5. Every `photoHash` and `planHash` in the report names a file in `photos/`
    whose bytes hash to its name. A photograph in `photos/` that the report
    does not name is also a failure: a bundle carries nothing it did not sign.
-6. If `countersign.bin` is present, `countersign.sig` verifies over it with
+6. If `amendment.bin` is present, `amendment.sig` verifies over it with the
+   same key, it decodes, its original id equals `<id>`, and the amended
+   report changes nothing but each room's numbers and plan — the same rooms,
+   items, captions, address and date, and no room's tier lowered. The report
+   a reader is then shown is the amended one; step 5 checks the photographs
+   of both. The original's seal is untouched and still verifies alone.
+7. If `countersign.bin` is present, `countersign.sig` verifies over it with
    the same key, it decodes, its `reportId` equals `<id>`, and
    `signature.jpg` is present and hashes to its `signatureHash`.
 
@@ -55,7 +65,7 @@ The PDF is not part of the bundle and is not signed. It is a rendering of
 
 `scripts/verify.py` is this document, in Python, with P-256 written out
 from its constants and no dependencies. `make verify-check` runs it against
-a bundle the app sealed — `SnagTests/Fixtures/bundle-v1` — and against six
+a bundle the app sealed — `SnagTests/Fixtures/bundle-v1` — and against eight
 tampers of it, every time. If the app and the script ever disagree, one of
 them has drifted from this page.
 

@@ -30,6 +30,10 @@ cp -R "$FIX" "$T/d"; rm "$T/d/countersign.sig"
 expect "a counter-signature with no signature" "altered: counter-signature incomplete" "$T/d"
 cp -R "$FIX" "$T/g"; printf '\x01' | dd of="$T/g/signature.jpg" bs=1 seek=20 conv=notrunc 2>/dev/null
 expect "one byte of the drawn signature flipped" "altered: signature image" "$T/g"
+cp -R "$FIX" "$T/h"; printf '\x01' | dd of="$T/h/amendment.bin" bs=1 seek=60 conv=notrunc 2>/dev/null
+expect "one byte of the amendment flipped" "altered: amendment signature" "$T/h"
+cp -R "$FIX" "$T/i"; rm "$T/i/amendment.sig"
+expect "an amendment with no signature" "altered: amendment incomplete" "$T/i"
 cp -R "$FIX" "$T/e"; rm "$T/e/key.pub"
 expect "no key" "not a bundle" "$T/e"
 (cd "$FIX" && python3 -c "

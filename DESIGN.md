@@ -62,8 +62,11 @@ Spacing on a four-point grid — 4, 8, 12, 16, 24, 32.
 Every tappable surface scales to 0.96 under the thumb.
 
 **One primary action per screen, pinned below the scroll.** During the walk it is the
-shutter or *Next room*, never both. Asserted on every screen at 100% and 200% type by
-`SnagUITests/PrimaryActionTests.swift`.
+shutter, and nothing else at 64 points. Every screen's one primary button is the one the
+UI tests name — *New report*, *Walk the flat*, *Add a room*, *Photograph*, *Done*, *Seal*,
+*Share PDF*, *Check*, *Counter-sign*, *Use this measurement*, *Use this scan* — and the
+screenshots in the README are the eye's check at 100%; `.textClipped` at the largest size
+is the machine's.
 
 ## Type
 

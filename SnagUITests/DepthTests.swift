@@ -61,10 +61,13 @@ final class DepthUITests: XCTestCase {
         let app = launch()
         XCTAssertTrue(app.buttons["Settings"].waitForExistence(timeout: 5))
         app.buttons["Settings"].tap()
-        XCTAssertTrue(app.switches["nudge"].waitForExistence(timeout: 3))
-        XCTAssertTrue(app.switches["lock"].exists)
-        XCTAssertTrue(app.buttons["Restore from a backup"].exists)
+        XCTAssertTrue(app.buttons["lang-en"].waitForExistence(timeout: 3))
+        // Audited before it is scrolled — a scrolled List reports rows that
+        // straddle its edges as clipped, whatever they do when laid out.
         try audit(app, "settings")
+        XCTAssertTrue(reveal(app.switches["nudge"], in: app))
+        XCTAssertTrue(app.switches["lock"].exists)
+        XCTAssertTrue(reveal(app.buttons["Restore from a backup"], in: app))
         app.buttons["Done"].tap()
         app.terminate()
 

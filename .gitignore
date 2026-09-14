@@ -11,6 +11,9 @@ docs/*
 !docs/mark.png
 # The bundle format is a public spec: anybody may write a verifier from it.
 !docs/BUNDLE-FORMAT.md
+# The listing the copy gate reads, and the checklist for the gates only a phone can clear.
+!docs/APPSTORE.md
+!docs/HANDSET-DAY.md
 
 
 # OS / editors

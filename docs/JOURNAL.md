@@ -271,3 +271,63 @@ uses to host the app. Six cold launches without it: 25, 19, 18, 26, 21,
 own `performActionFor` now, which UIKit calls when the scene delegate does
 not take it. The boot-first change stays; it was right for the runner and
 wrong about the cause.
+
+## 2026-09-14, mid-morning — the sensors' tiers, without the sensors
+
+"Build it, we will test the hardware later." Phases 2 and 3, then, as far
+as a simulator reaches. The domain first: `Floor` — the shoelace area, the
+sides of the tightest rectangle along the longest edge so a slanted tap
+measures the same as a square one, the centimetre rounding, and a room
+that takes a measurement but never a lower tier over a higher one. Twenty-
+one domain tests. Then ARKit: plane detection and a raycast per tap, the
+corner's x and z on the floor; and RoomPlan: the captured room's floor
+polygon and the bottom edges of its walls, doors and windows projected
+onto the floor plane. Both end in the same `ScannedFloor`, which is what
+the plan renderer draws and what the fixture provides on the simulator,
+so the plan, the bundle, both verifiers and the PDF are exercised here.
+The viewfinder too, since a phone's shutter had been firing blind.
+
+### What surprised us
+
+**The domain has no trigonometry.** No Foundation means no `sin`; the test
+that turns the rectangle brings a twelve-term series of its own. Six lines,
+and the domain stays pure.
+
+**Phase 3 promised a thing the encoding cannot hold.** "A snag placed on
+the plan" needs a coordinate on the item, and the item has no such field.
+It goes to the backlog with its reason — version 2, with an ADR, after a
+real scan has been watched — rather than into a caption where a number
+would pretend to be a word.
+
+**`16 == 16.0` is not true in a test macro.** `#expect(area == 12 + 4)`
+compared a Double? with an Int and failed with both sides printing 16.
+
+## 2026-09-14, midday — v1.1, and the hang found for real
+
+"Let's do v1.1 too." Five languages first: every string routed through one
+lookup keyed by its English, four tables of 202, a gate that fails on a
+missing one and the copy gate reading every table — which caught "burglary
+proof" in the Pidgin, the Lagos word, and was right to. Then the amendment
+layer, designed so the first seal is never touched: a second signed file
+beside it that may add numbers and plans and nothing else, and both
+verifiers refusing a reworded caption or a report moved under another id.
+Then iCloud, written against a protocol and proved with two phones in
+memory before a line of CloudKit was called.
+
+### What surprised us
+
+**The hang has now had three explanations, and all three were wrong.**
+A cold simulator, then our scene delegate, then a rebuild inside the same
+`xcodebuild test` — each held for six clean runs and then the host hung
+again with none of them present. What is true: it is the hosted unit
+bundle only, one launch in three, the app itself never crashing, the UI
+runner never hanging. The Makefile now retries the unit bundle up to
+three times and says so; the three wrong explanations stay in this journal
+because each one looked like proof for a day.
+
+**A PDF loses its glyphs in extraction.** The "×" between two dimensions
+and the tone marks on Yorùbá both came back from PDFKit's text as
+something else. The tests read the words around them now.
+
+**A translation can fail the copy gate.** Which is the reason the copy
+gate reads the translations.

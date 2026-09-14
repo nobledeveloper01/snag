@@ -29,7 +29,7 @@ ok()   { printf '%s✓%s %s\n' "$GRN" "$OFF" "$1"; }
 REQUIRED="README.md DESIGN.md CHANGELOG.md PHASE
           docs/ROADMAP.md docs/JOURNAL.md docs/00-PRODUCT-STATEMENT.md
           docs/FEATURE-BACKLOG.md docs/RELEASE-GATES.md docs/mark.png
-          docs/BUNDLE-FORMAT.md"
+          docs/BUNDLE-FORMAT.md docs/APPSTORE.md docs/HANDSET-DAY.md"
 
 for f in $REQUIRED; do
   [ -f "$f" ] || err "missing $f"

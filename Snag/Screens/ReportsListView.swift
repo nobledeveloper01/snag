@@ -11,6 +11,7 @@ struct ReportsListView: View {
     @State private var settings = false
     @State private var query = ""
     @State private var launch = Launch.shared
+    @State private var l10n = L10nState.shared
     @State private var path: [Route] = []
     @State private var opened: URL?
 
@@ -86,6 +87,8 @@ struct ReportsListView: View {
                     .listRoom()
                 }
             }
+            // A new language is a new tree: every string is looked up on render.
+            .id(l10n.language)
             .pinned {
                 VStack(spacing: Gap.s) {
                     Button(Strings.newReport) { creating = true }
@@ -95,6 +98,7 @@ struct ReportsListView: View {
                             Button(Strings.checkPaper) { checking = true }.buttonStyle(Secondary(palette: palette))
                         }
                         Button(Strings.settings) { settings = true }.buttonStyle(Secondary(palette: palette))
+                            .accessibilityIdentifier("settings")
                     }
                 }
                 .padding(Gap.l)
@@ -129,6 +133,7 @@ struct ReportsListView: View {
             // the share sheet, which the simulator cannot deliver.
             if CommandLine.arguments.contains("-openLatest"), let url = store.latestBundle { opened = url }
             if CommandLine.arguments.contains("-scanLatest") { checking = true }
+            if CommandLine.arguments.contains("-settings") { settings = true }
             if CommandLine.arguments.contains("-newReport") { Launch.shared.wantsNewReport = true }
             if launch.wantsNewReport { creating = true; launch.wantsNewReport = false }
         }

@@ -16,6 +16,10 @@ enum SnagBundle {
     /// The drawn signature, as a picture, named in the counter-signature by
     /// its hash the way a photograph is named in the report.
     static let signatureImage = "signature.jpg"
+    /// The amendment layer: the original's id, a date and the whole amended
+    /// report, signed with the same key. The original seal is not touched.
+    static let amendmentFile = "amendment.bin"
+    static let amendmentSigFile = "amendment.sig"
     /// The bundle as one file: the same files, zipped, stored. WhatsApp
     /// carries a file and not a folder.
     static let zipExtension = "snagz"
@@ -44,6 +48,16 @@ enum SnagBundle {
         let url = dir.deletingPathExtension().appendingPathExtension(zipExtension)
         try ZipFile.archive(directory: dir).write(to: url)
         return url
+    }
+
+    /// The amendment beside the original, and the new plans into photos/.
+    static func writeAmendment(_ bytes: [UInt8], seal: Seal, photos: [([UInt8], URL)], to dir: URL) throws {
+        for (hash, src) in photos {
+            let dst = dir.appendingPathComponent(photosDir).appendingPathComponent(hex(hash) + ".jpg")
+            if !FileManager.default.fileExists(atPath: dst.path) { try FileManager.default.copyItem(at: src, to: dst) }
+        }
+        try Data(bytes).write(to: dir.appendingPathComponent(amendmentFile))
+        try Data(seal.signature).write(to: dir.appendingPathComponent(amendmentSigFile))
     }
 
     static func writeCounterSignature(_ bytes: [UInt8], seal: Seal, signature image: Data, to dir: URL) throws {

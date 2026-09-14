@@ -2,7 +2,7 @@
 """Print what the app's test run did, and fail if it did nothing.
 
 `xcodebuild test -quiet` prints almost nothing on success, which is a green
-gate with no evidence in the log. This reads the newest result bundle and says
+gate with no evidence in the log. This reads the newest result bundles (the unit run, then the UI run) and says
 how many tests ran — and exits 1 on zero, because a suite that executed no
 tests is the definition of a gate passing for the wrong reason.
 """
@@ -21,11 +21,14 @@ def main() -> int:
     if not bundles:
         print(f"{RED}✗{RESET} no result bundle under {derived} — did xcodebuild test run?")
         return 1
-    out = subprocess.run(["xcrun", "xcresulttool", "get", "test-results", "summary", "--path", str(bundles[-1])],
-                         capture_output=True, text=True, check=True).stdout
-    d = json.loads(out)
-    total, passed, failed = d.get("totalTestCount", 0), d.get("passedTests", 0), d.get("failedTests", 0)
-    skipped = d.get("skippedTests", 0)
+    # Two bundles per run — the unit tests, then the UI tests — added up.
+    total = passed = failed = skipped = 0
+    for bundle in bundles[-2:]:
+        out = subprocess.run(["xcrun", "xcresulttool", "get", "test-results", "summary", "--path", str(bundle)],
+                             capture_output=True, text=True, check=True).stdout
+        d = json.loads(out)
+        total += d.get("totalTestCount", 0); passed += d.get("passedTests", 0)
+        failed += d.get("failedTests", 0); skipped += d.get("skippedTests", 0)
     if total == 0 or passed == 0:
         print(f"{RED}✗{RESET} the app suite executed 0 tests")
         return 1

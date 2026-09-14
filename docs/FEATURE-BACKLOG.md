@@ -6,15 +6,16 @@ into a graveyard.
 
 | | Why not now |
 |---|---|
-| Hausa, Yoruba and Igbo | v1.1. The primary persona is an iPhone-owning tenant in Lagos, Abuja or Port Harcourt, and English and Pidgin cover that person. The other three arrive with the strings already in one enum, so it is translation and not engineering. |
+| Hausa, Yoruba and Igbo | **Built 2026-09-14**, with Naijá, as drafts — R5 is the native speakers. Was: v1.1. The primary persona is an iPhone-owning tenant in Lagos, Abuja or Port Harcourt, and English and Pidgin cover that person. The other three arrive with the strings already in one enum, so it is translation and not engineering. |
 | An agent with several flats | v1.1. One tenant, one flat, one report is the wedge. Several reports on one phone is a list screen, and a list screen before there is a second report is furniture. |
-| Upgrading a photographed report to a scanned one later | v1.1. Needs two signatures over two encodings in one bundle, and the sealing model should be proved on one signature first. |
-| iCloud sync between the tenant's own devices | v1.1, and only with CloudKit's private database — still no server of ours. Deferred because a report lives on the phone that made it, and losing that phone is a rarer problem than the ones ahead of it. |
+| Upgrading a photographed report to a scanned one later | **Built 2026-09-14** as the amendment layer, ADR-0005. Was: v1.1. Needs two signatures over two encodings in one bundle, and the sealing model should be proved on one signature first. |
+| iCloud sync between the tenant's own devices | **Built 2026-09-14**, opt-in, ADR-0005; CloudKit itself waits for a signed-in phone. Was: v1.1, and only with CloudKit's private database — still no server of ours. Deferred because a report lives on the phone that made it, and losing that phone is a rarer problem than the ones ahead of it. |
 | A server timestamp, or a notary | **Not scheduled**, and the reason is [ADR-0003](adr/0003-the-report-is-evidence-not-proof.md). Listed so the request has somewhere to land. |
 | A deduction calculator | **Never.** The app records the condition of a room; what that is worth is between the parties, and the moment the app says a number it is giving legal advice about money. |
 | A fourth tier, measured against a reference object in the photograph | **Refused** by [ADR-0004](adr/0004-thirty-things-and-the-line-each-does-not-cross.md). A number that is neither photographed, measured nor scanned is a number with no tier, and the tier beside every number is a rule. |
 | Annotating a photograph — a circle round the crack | **Refused.** The annotated image would become the evidence and the original would not be in the bundle. The caption says where the crack is. |
 | Who was present, as a field in the report | **Refused.** A field is a change to the encoding, and the encoding never changes. Presence is the counter-signature, or it is nothing. |
+| Placing a snag on the floor plan | Phase 3's roadmap text promised it and it is not built: it needs a scanned room *and* a tap on the plan, which is a second coordinate in the item — a field the encoding does not have. Version 2 of the encoding, with an ADR, when a scanned report has been watched on a real phone. |
 | Landlord-side app | Not scheduled. The landlord signs on the tenant's phone, which is the point: one phone, one report, no account. A landlord who wants their own copy has the PDF and the bundle. |
 
 ## Built, and why

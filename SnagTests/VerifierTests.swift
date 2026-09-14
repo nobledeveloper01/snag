@@ -121,8 +121,54 @@ final class VerifierTests: XCTestCase {
         let c = CounterSignature(reportId: id, name: "Mr T. Okafor", phone: "+2348012345678", signatureHash: SnagBundle.sha256(image), signedAt: 1_789_003_600)
         let cBytes = try Canonical.bytes(of: c)
         try SnagBundle.writeCounterSignature(cBytes, seal: try sealer.seal(cBytes), signature: image, to: b)
-        guard case .unaltered = Verifier.verify(b) else { return XCTFail("the fixture must verify before it is written") }
+        // And an amendment: the kitchen scanned later, its plan in the bundle.
+        var amended = r
+        XCTAssertTrue(amended.rooms[1].measure(ScannedFloor.fixture.corners, tier: .scanned))
+        let plan = try XCTUnwrap(PlanRenderer.jpeg(ScannedFloor.fixture, label: "Kitchen"))
+        let planURL = dir.appendingPathComponent("plan.jpg"); try plan.write(to: planURL)
+        amended.rooms[1].planHash = SnagBundle.sha256(plan)
+        let aBytes = try Canonical.bytes(of: Amendment(originalId: id, amendedAt: 1_789_090_000, report: amended))
+        try SnagBundle.writeAmendment(aBytes, seal: try sealer.seal(aBytes), photos: [(SnagBundle.sha256(plan), planURL)], to: b)
+        guard case .unaltered(let shown, _) = Verifier.verify(b), shown == amended else { return XCTFail("the fixture must verify, amended, before it is written") }
         try FileManager.default.copyItem(at: b, to: target)
+    }
+
+    func testAnAmendmentAddsNumbersUnderTheSameKeyAndNothingElse() throws {
+        let (r, _) = try sealedBundle()
+        let b = dir.appendingPathComponent("b.snag")
+        let id = SnagBundle.sha256(Data(try Canonical.bytes(of: r)))
+        var amended = r
+        XCTAssertTrue(amended.rooms[1].measure(ScannedFloor.fixture.corners, tier: .scanned))
+        let plan = try XCTUnwrap(PlanRenderer.jpeg(ScannedFloor.fixture, label: "Kitchen"))
+        let planURL = dir.appendingPathComponent("plan.jpg"); try plan.write(to: planURL)
+        amended.rooms[1].planHash = SnagBundle.sha256(plan)
+        let aBytes = try Canonical.bytes(of: Amendment(originalId: id, amendedAt: 9, report: amended))
+        try SnagBundle.writeAmendment(aBytes, seal: try sealer.seal(aBytes), photos: [(SnagBundle.sha256(plan), planURL)], to: b)
+        guard case .unaltered(let shown, _) = Verifier.verify(b) else { return XCTFail("the amended bundle verifies") }
+        XCTAssertEqual(shown, amended, "the amended report is the one shown")
+        XCTAssertEqual(shown.tier, .scanned)
+        XCTAssertEqual(Verifier.amendment(in: b)?.amendedAt, 9)
+        // The original's seal still stands on its own bytes.
+        let original = try Canonical.report(from: Array(try Data(contentsOf: b.appendingPathComponent(SnagBundle.reportFile))))
+        XCTAssertEqual(original, r)
+        // An amendment that changes a caption: altered.
+        var reworded = amended
+        reworded.rooms[0].items[0].caption = "Not what was written"
+        let wBytes = try Canonical.bytes(of: Amendment(originalId: id, amendedAt: 9, report: reworded))
+        try SnagBundle.writeAmendment(wBytes, seal: try sealer.seal(wBytes), photos: [], to: b)
+        guard case .altered("amendment changes more than numbers") = Verifier.verify(b) else { return XCTFail("a reworded amendment was accepted") }
+        // An amendment for another report: altered.
+        let oBytes = try Canonical.bytes(of: Amendment(originalId: [UInt8](repeating: 3, count: 32), amendedAt: 9, report: amended))
+        try SnagBundle.writeAmendment(oBytes, seal: try sealer.seal(oBytes), photos: [], to: b)
+        guard case .altered("amendment is for another report") = Verifier.verify(b) else { return XCTFail("a moved amendment was accepted") }
+        // Every byte of a good amendment flipped: altered.
+        try SnagBundle.writeAmendment(aBytes, seal: try sealer.seal(aBytes), photos: [], to: b)
+        let good = try Data(contentsOf: b.appendingPathComponent(SnagBundle.amendmentFile))
+        for i in stride(from: 0, to: good.count, by: max(1, good.count / 40)) {
+            var bad = good; bad[i] ^= 0x01
+            try bad.write(to: b.appendingPathComponent(SnagBundle.amendmentFile))
+            if case .unaltered = Verifier.verify(b) { XCTFail("amendment byte \(i) flipped and accepted") }
+        }
     }
 
     func testNotABundle() {
