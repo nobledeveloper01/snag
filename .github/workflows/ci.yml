@@ -35,3 +35,15 @@ jobs:
 
       - name: make ci
         run: make ci SIM="$SIM"
+
+      - name: The test results, when they are the reason
+        # xcodebuild -quiet names the failing test and nothing else; the
+        # result bundle has the assertion, the screenshots and the element
+        # tree. Kept for a week, only on failure.
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xcresult
+          path: .build/DerivedData/Logs/Test/*.xcresult
+          retention-days: 7
+          if-no-files-found: ignore
