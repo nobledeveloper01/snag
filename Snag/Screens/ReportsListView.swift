@@ -19,7 +19,7 @@ struct ReportsListView: View {
         NavigationStack(path: $path) {
             ZStack {
                 LinearGradient(colors: palette.canvas, startPoint: .top, endPoint: .bottom).ignoresSafeArea()
-                if store.drafts.isEmpty && store.sealed.isEmpty {
+                if store.drafts.isEmpty && store.sealed.isEmpty && store.broken.isEmpty {
                     // In a ScrollView, so the largest text sizes scroll rather
                     // than clip — the audit found it on the first run.
                     ScrollView {
@@ -65,6 +65,22 @@ struct ReportsListView: View {
                                 Text(Strings.sealed).font(Type.secondaryFont()).foregroundStyle(palette.textSecondary)
                             }
                         }
+                        // A bundle that no longer reads is listed as what it is.
+                        if !store.broken.isEmpty {
+                            Section {
+                                ForEach(store.broken, id: \.self) { url in
+                                    Button { opened = url } label: {
+                                        VStack(alignment: .leading, spacing: Gap.xs) {
+                                            Text(Strings.altered).font(Type.titleFont()).foregroundStyle(palette.textPrimary)
+                                            Text(String(url.deletingPathExtension().lastPathComponent.prefix(16)) + "…").font(Type.secondaryFont().monospaced()).foregroundStyle(palette.textSecondary)
+                                        }
+                                        .frame(minHeight: Target.standard)
+                                    }
+                                }
+                            } header: {
+                                Text(Strings.cannotBeRead).font(Type.secondaryFont()).foregroundStyle(palette.textSecondary)
+                            }
+                        }
                     }
                     .scrollContentBackground(.hidden)
                     .listRoom()
@@ -75,7 +91,7 @@ struct ReportsListView: View {
                     Button(Strings.newReport) { creating = true }
                         .buttonStyle(Primary(palette: palette))
                     HStack(spacing: Gap.s) {
-                        if !store.sealed.isEmpty {
+                        if !store.sealed.isEmpty || !store.broken.isEmpty {
                             Button(Strings.checkPaper) { checking = true }.buttonStyle(Secondary(palette: palette))
                         }
                         Button(Strings.settings) { settings = true }.buttonStyle(Secondary(palette: palette))
@@ -110,7 +126,7 @@ struct ReportsListView: View {
             }
             // -openLatest: the UI test's stand-in for a bundle arriving through
             // the share sheet, which the simulator cannot deliver.
-            if CommandLine.arguments.contains("-openLatest"), let s = store.sealed.last { opened = s.url }
+            if CommandLine.arguments.contains("-openLatest"), let url = store.latestBundle { opened = url }
             if CommandLine.arguments.contains("-scanLatest") { checking = true }
             if CommandLine.arguments.contains("-newReport") { Launch.shared.wantsNewReport = true }
             if launch.wantsNewReport { creating = true; launch.wantsNewReport = false }

@@ -57,7 +57,7 @@ struct CounterSignView: View {
             .toolbar {
                 ToolbarItemGroup(placement: .keyboard) {
                     Spacer()
-                    Button(Strings.done) { focus = nil }.accessibilityIdentifier("keyboardDone")
+                    Button(Strings.hideKeyboard) { focus = nil }.accessibilityIdentifier("keyboardDone")
                 }
             }
             .pinned {

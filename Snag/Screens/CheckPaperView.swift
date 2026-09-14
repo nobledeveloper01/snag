@@ -16,6 +16,7 @@ struct CheckPaperView: View {
 
     enum Result: Equatable {
         case matches(ReportStore.Sealed, Verdict)
+        case matchesBroken(URL)
         case keyDiffers(ReportStore.Sealed)
         case notHere
         case notACode
@@ -24,47 +25,55 @@ struct CheckPaperView: View {
     var body: some View {
         let palette = Palette.current(scheme)
         NavigationStack {
-            List {
-                // The answer first, above the fold, where the eye lands.
-                if let result {
-                    Section {
-                        switch result {
-                        case .matches(let s, let v):
-                            Text("\(Strings.matches) \(s.report.address)").font(Type.headlineFont()).foregroundStyle(palette.textPrimary).frame(minHeight: Target.standard)
-                            VerdictRow(verdict: v, palette: palette)
-                        case .keyDiffers(let s):
-                            Text("\(Strings.matches) \(s.report.address)").font(Type.headlineFont()).foregroundStyle(palette.textPrimary).frame(minHeight: Target.standard)
-                            Text(Strings.keyDiffers).font(Type.bodyFont()).foregroundStyle(palette.snag).frame(minHeight: Target.standard)
-                        case .notHere:
-                            Text(Strings.notHere).font(Type.bodyFont()).foregroundStyle(palette.textPrimary).frame(minHeight: Target.standard)
-                        case .notACode:
-                            Text(Strings.notACode).font(Type.bodyFont()).foregroundStyle(palette.textPrimary).frame(minHeight: Target.standard)
-                        }
-                    }
-                    .accessibilityIdentifier("result")
-                }
-                if Scanner.available {
-                    Section {
+            // A ScrollView of cards, not a List: a List presented in this sheet
+            // kept drawing its first layout on the simulator while the
+            // accessibility tree — and the tests — saw the answer. The item
+            // sheet is built this way and has never done that.
+            ScrollView {
+                VStack(alignment: .leading, spacing: Gap.m) {
+                    if Scanner.available {
                         Scanner { check($0) }
                             .frame(height: 240)
                             .clipShape(RoundedRectangle(cornerRadius: Radius.card))
                             .accessibilityLabel(Strings.scanner)
                     }
-                }
-                Section {
                     Text(Strings.checkPaperHint).font(Type.bodyFont()).foregroundStyle(palette.textSecondary)
-                    // An editor, not a field: a field's inner view sizes to its
-                    // text and the audit measures that; an editor owns its frame.
+                    Text(Strings.codeSays).font(Type.secondaryFont()).foregroundStyle(palette.textSecondary)
                     TextEditor(text: $typed)
                         .font(Type.bodyFont())
                         .textInputAutocapitalization(.never).autocorrectionDisabled()
                         .scrollContentBackground(.hidden)
                         .frame(minHeight: Target.standard)
+                        .padding(Gap.s)
+                        .background(palette.raised, in: RoundedRectangle(cornerRadius: Radius.tile))
                         .accessibilityLabel(Strings.codeSays).accessibilityIdentifier("code")
+                    if let result {
+                        VStack(alignment: .leading, spacing: Gap.s) {
+                            switch result {
+                            case .matches(let s, let v):
+                                Text("\(Strings.matches) \(s.report.address)").font(Type.headlineFont()).foregroundStyle(palette.textPrimary).frame(minHeight: Target.standard)
+                                VerdictRow(verdict: v, palette: palette)
+                            case .matchesBroken:
+                                Text(Strings.matchesBroken).font(Type.headlineFont()).foregroundStyle(palette.textPrimary).frame(minHeight: Target.standard)
+                                VerdictRow(verdict: .altered("unreadable"), palette: palette)
+                            case .keyDiffers(let s):
+                                Text("\(Strings.matches) \(s.report.address)").font(Type.headlineFont()).foregroundStyle(palette.textPrimary).frame(minHeight: Target.standard)
+                                Text(Strings.keyDiffers).font(Type.bodyFont()).foregroundStyle(palette.snag).frame(minHeight: Target.standard)
+                            case .notHere:
+                                Text(Strings.notHere).font(Type.bodyFont()).foregroundStyle(palette.textPrimary).frame(minHeight: Target.standard)
+                            case .notACode:
+                                Text(Strings.notACode).font(Type.bodyFont()).foregroundStyle(palette.textPrimary).frame(minHeight: Target.standard)
+                            }
+                        }
+                        .padding(Gap.m)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(palette.raised, in: RoundedRectangle(cornerRadius: Radius.card))
+                        .accessibilityIdentifier("result")
+                    }
                 }
+                .padding(Gap.l)
             }
-            .scrollContentBackground(.hidden)
-            .listRoom()
+            .scrollDismissesKeyboard(.immediately)
             .pinned {
                 // Check is pinned, so the keyboard never covers it.
                 VStack(spacing: Gap.s) {
@@ -78,14 +87,13 @@ struct CheckPaperView: View {
             .navigationTitle(Strings.checkPaper)
         }
         .tint(palette.accent)
-        .onAppear {
+        .task {
             // -scanLatest: the UI test's stand-in for the camera reading the
             // cover of the latest sealed report.
-            if CommandLine.arguments.contains("-scanLatest"), let s = store.sealed.last,
-               let key = try? Data(contentsOf: s.url.appendingPathComponent(SnagBundle.keyFile)) {
-                typed = ReportPDF.qrPayload(id: s.id, publicKey: Array(key))
-                check(typed)
-            }
+            guard CommandLine.arguments.contains("-scanLatest"), let url = store.latestBundle,
+                  let key = try? Data(contentsOf: url.appendingPathComponent(SnagBundle.keyFile)) else { return }
+            typed = ReportPDF.qrPayload(id: url.deletingPathExtension().lastPathComponent, publicKey: Array(key))
+            check(typed)
         }
     }
 
@@ -93,7 +101,10 @@ struct CheckPaperView: View {
     private func check(_ text: String) {
         let parts = text.trimmingCharacters(in: .whitespacesAndNewlines).split(separator: ":").map(String.init)
         guard parts.count == 4, parts[0] == "snag", parts[1] == "1", parts[2].count == 64 else { result = .notACode; return }
-        guard let s = store.sealed.first(where: { $0.id == parts[2] }) else { result = .notHere; return }
+        guard let s = store.sealed.first(where: { $0.id == parts[2] }) else {
+            result = store.broken.contains { $0.deletingPathExtension().lastPathComponent == parts[2] } ? .matchesBroken(store.broken.first { $0.deletingPathExtension().lastPathComponent == parts[2] }!) : .notHere
+            return
+        }
         let key = (try? Data(contentsOf: s.url.appendingPathComponent(SnagBundle.keyFile))).map(Array.init) ?? []
         guard ReportPDF.qrPayload(id: s.id, publicKey: key) == "snag:1:\(parts[2]):\(parts[3])" else { result = .keyDiffers(s); return }
         result = .matches(s, Verifier.verify(s.url))

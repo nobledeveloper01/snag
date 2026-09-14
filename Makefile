@@ -104,6 +104,10 @@ test-domain: ## The domain package's tests, on macOS, in seconds
 .PHONY: test-app
 test-app: ## The app's unit and UI tests on the simulator
 	@[ -n "$(SIM)" ] || { echo "\033[0;33m!\033[0m no simulator found:  make test-app SIM=<udid>"; exit 64; }
+	@# Booted and settled first. Left to xcodebuild, the host app is launched
+	@# into a simulator still coming up and, one run in three, XCTest reports
+	@# "the test runner hung before establishing connection".
+	@xcrun simctl boot $(SIM) >/dev/null 2>&1 || true; xcrun simctl bootstatus $(SIM) -b >/dev/null 2>&1 || true
 	xcodebuild test -project $(PROJECT) -scheme $(SCHEME) -destination "$(DEST)" \
 	  -derivedDataPath $(DERIVED) -quiet; rc=$$?; \
 	  xcrun simctl terminate $(SIM) ng.snag.app >/dev/null 2>&1; \
@@ -149,7 +153,10 @@ run: build ## Install and launch on the simulator
 
 # --- documentation ----------------------------------------------------------
 
-.PHONY: screenshot
+.PHONY: screenshot screenshots
+screenshots: ## Retake every README screenshot on the headless simulator
+	@bash scripts/screenshots.sh
+
 screenshot: ## Capture a booted simulator screen:  make screenshot N=02-camera
 	@if [ -z "$(N)" ]; then \
 	  echo "\033[0;33m!\033[0m no name given:  make screenshot N=02-camera"; \

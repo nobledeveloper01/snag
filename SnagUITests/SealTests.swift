@@ -125,7 +125,7 @@ final class SealTests: XCTestCase {
         XCTAssertTrue(paper.staticTexts["Unaltered since signing"].exists)
         try audit(paper, "paper check")
         let code = paper.textViews["code"]
-        code.tap(); code.typeText(" x")     // not a code any more
+        type(" x", into: code, in: paper)     // not a code any more
         paper.buttons["Check"].tap()
         XCTAssertTrue(paper.staticTexts["That is not a Snag code."].waitForExistence(timeout: 3))
         paper.buttons["Done"].tap()

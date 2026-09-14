@@ -37,6 +37,9 @@ final class ReportStore {
 
     private(set) var drafts: [Draft] = []
     private(set) var sealed: [Sealed] = []
+    /// Bundles on disk whose report no longer decodes. Listed, not hidden: a
+    /// bundle that has gone bad is shown as altered, never made to vanish.
+    private(set) var broken: [URL] = []
     let root: URL
 
     init(root: URL? = nil) {
@@ -54,8 +57,13 @@ final class ReportStore {
                   let r = try? Canonical.report(from: Array(data)) else { return nil }
             return Draft(id: name, report: r)
         }
+        broken = []
         sealed = ((try? fm.contentsOfDirectory(atPath: root.appendingPathComponent("reports").path)) ?? []).sorted().compactMap { name in
             let url = root.appendingPathComponent("reports").appendingPathComponent(name)
+            if name.hasSuffix(".snag"), fm.fileExists(atPath: url.appendingPathComponent(SnagBundle.reportFile).path),
+               (try? Data(contentsOf: url.appendingPathComponent(SnagBundle.reportFile))).flatMap({ try? Canonical.report(from: Array($0)) }) == nil {
+                broken.append(url)
+            }
             // Listed if it decodes, whatever the verifier will say: a bundle
             // that has gone bad on disk is shown as altered, not hidden.
             guard name.hasSuffix(".snag"),
@@ -65,6 +73,10 @@ final class ReportStore {
             return Sealed(id: String(name.dropLast(5)), url: url, report: r, counter: counter)
         }
     }
+
+    /// The newest bundle on the phone, readable or not — for the launch
+    /// arguments that stand in for the share sheet and the camera.
+    var latestBundle: URL? { sealed.last?.url ?? broken.last }
 
     func draftDir(_ id: String) -> URL { root.appendingPathComponent("drafts").appendingPathComponent(id) }
     func photoURL(draft id: String, hash: [UInt8]) -> URL {

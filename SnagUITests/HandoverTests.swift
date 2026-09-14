@@ -104,9 +104,16 @@ final class HandoverTests: XCTestCase {
             return false
         }
         app.buttons["Add to my calendar"].tap()
+        // The permission sheet is SpringBoard's; the monitor above handles it
+        // when it fires, and this handles it when — as on the CI runner — it
+        // does not.
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        for label in ["Allow Full Access", "Allow", "OK"] where springboard.buttons[label].waitForExistence(timeout: 3) {
+            springboard.buttons[label].tap(); break
+        }
         app.tap()   // nudges the interruption monitor
         let outcome = app.staticTexts["outcome"]
-        XCTAssertTrue(outcome.waitForExistence(timeout: 15), "an outcome, one way or the other")
+        XCTAssertTrue(outcome.waitForExistence(timeout: 30), "an outcome, one way or the other — \(springboard.debugDescription.prefix(800))")
         XCTAssertEqual(outcome.label, "In your calendar.", "the event was written")
         removeUIInterruptionMonitor(monitor)
         app.buttons["Done"].tap()

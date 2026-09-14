@@ -257,6 +257,8 @@ struct ItemSheet: View {
     @State private var state: ItemState
     @State private var reading = ""
     @State private var keys = 1
+    @FocusState private var focus: Field?
+    enum Field { case caption, reading }
 
     init(image: UIImage?, palette: Palette, initial: Item?, prompt: String?, issues: [Photo.Issue], done: @escaping (ItemState, String) -> Void, cancel: @escaping () -> Void) {
         self.image = image; self.palette = palette; self.initial = initial; self.prompt = prompt; self.issues = issues; self.done = done; self.cancel = cancel
@@ -314,6 +316,7 @@ struct ItemSheet: View {
                             .frame(minHeight: Target.standard)
                             .background(palette.raised, in: RoundedRectangle(cornerRadius: Radius.tile))
                             .accessibilityLabel(Strings.reading).accessibilityIdentifier("reading")
+                            .focused($focus, equals: .reading)
                     }
                     if kind == .keys {
                         Stepper(value: $keys, in: 0...20) {
@@ -330,6 +333,7 @@ struct ItemSheet: View {
                         .padding(Gap.s)
                         .background(palette.raised, in: RoundedRectangle(cornerRadius: Radius.tile))
                         .accessibilityLabel(Strings.caption).accessibilityIdentifier("caption")
+                        .focused($focus, equals: .caption)
                         .onChange(of: caption) { _, new in if new.count > Canonical.maxCaption { caption = String(new.prefix(Canonical.maxCaption)) } }
                     HStack(spacing: Gap.s) {
                         ChoiceRow(title: Strings.snag, selected: state == .snag, palette: palette) { state = .snag }
@@ -349,6 +353,13 @@ struct ItemSheet: View {
                 .padding(Gap.l)
             }
             .navigationTitle(initial == nil ? Strings.item : Strings.edit)
+            .scrollDismissesKeyboard(.immediately)
+            .toolbar {
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button(Strings.hideKeyboard) { focus = nil }.accessibilityIdentifier("keyboardDone")
+                }
+            }
         }
         .tint(palette.accent)
         .interactiveDismissDisabled()

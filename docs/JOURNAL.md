@@ -212,3 +212,37 @@ reported "the test runner hung before establishing connection" — twice,
 only under `make ci`, never under `make test-app`, because the order of
 launches differed. `-lock` is now an in-memory override, and a test host
 never locks. The simulator was erased to be sure.
+
+## 2026-09-14, dawn — the pictures
+
+`make screenshots`: a UI test walks the flow the README shows and attaches
+a screen at each step; a script pulls them out of the result bundle and
+shrinks them. Eleven frames, interleaved through the README under the
+walk, the seal, and the paper.
+
+### What surprised us
+
+**The screenshot run found a hidden bundle.** The two-bedroom template
+leaves the balcony empty, so the tampering hook's flipped last byte landed
+on the room's item count instead of a timestamp, the report no longer
+decoded, and the store — which listed only bundles it could decode — made
+it vanish. A bundle that has gone bad is now listed under *Cannot be read*
+and opens to *Altered*; the paper check says the same. The second time a
+tampered bundle has tried to disappear, and the second rule against it.
+
+**Two buttons that say Done.** The keyboard's new Done and the sheet's
+pinned Done shared a label; a test tapped the wrong one on the CI runner
+and the right one here. *Hide keyboard* now, which is also what it does.
+
+**The CI runner asks for calendar permission and nobody answers.** The
+interruption monitor fires locally and not there; the test now also looks
+for SpringBoard's button by name. The result bundle is kept as an artifact
+on failure, which is how this was read at all.
+
+**Launched into a simulator still booting.** The hang came back after the
+lock was ruled out — one run in three, only from a cold simulator, and the
+host app never crashed: xcodebuild boots the simulator and launches the
+test host into it at once, and XCTest gives up on the connection before
+the phone is up. `make test-app` now boots and waits for `bootstatus`
+first, which is what the CI workflow had always done, and where it never
+hung.
