@@ -342,3 +342,11 @@ form: a figure and its middle dot have to sit on one line, or the regex that
 guards the figure reads it as gone. The repository also had no licence file;
 it has the portfolio's pair now — BSL for the app, Apache-2.0 for
 `SnagDomain` — with the grant written for tenancies.
+
+**Two UI tests failed on a documentation-only push, and passed on re-run.**
+`testAReportIsFoundByItsAddress` and `testTheSettingsAreReadAndTheLockShowsItsScreen`,
+both with three-second waits and one with SpringBoard's passcode sheet in it.
+Nothing in the commit touched code. The runner is the third machine these
+tests have flaked on for timing, and the honest fix is not a longer wait
+but the retry the unit bundle already has — noted here so the next failure
+on a README push is read as the runner before it is read as the app.
