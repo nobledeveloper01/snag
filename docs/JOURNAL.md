@@ -331,3 +331,14 @@ something else. The tests read the words around them now.
 
 **A translation can fail the copy gate.** Which is the reason the copy
 gate reads the translations.
+
+## 2026-09-15 — the README in Grid's shape
+
+The README is Grid's twelve sections now — the problem, how it works, the
+app, each layer, quick start, correctness notes, the pipeline, data handling,
+development, layout, status, licensing — because the user asked for that
+shape across the portfolio. The counts gate held the numbers sentence to a
+form: a figure and its middle dot have to sit on one line, or the regex that
+guards the figure reads it as gone. The repository also had no licence file;
+it has the portfolio's pair now — BSL for the app, Apache-2.0 for
+`SnagDomain` — with the grant written for tenancies.
