@@ -350,3 +350,25 @@ Nothing in the commit touched code. The runner is the third machine these
 tests have flaked on for timing, and the honest fix is not a longer wait
 but the retry the unit bundle already has — noted here so the next failure
 on a README push is read as the runner before it is read as the app.
+
+## 2026-09-17 — Looking for code that was left, and finding none
+
+**Did.** Went through the release gates, ADR-0004's thirty, the roadmap and
+the backlog for anything that was code and not a handset, a doorway, a
+lawyer or a reader — the same audit run on the other seven projects today.
+Snag has none. Every row that is not a gate is either built, refused by an
+ADR, or deferred on a reason that is hardware: placing a snag on the floor
+plan needs a second coordinate in the item, which is version 2 of an
+encoding that never changes, and that version waits — by its own rule — for
+a scanned report to have been watched on a real phone (R2).
+
+**What surprised us.** One backlog row was stale. *An agent with several
+flats* still said v1.1 and *a list screen before a second report is
+furniture*; the list screen has held every report on the phone since the
+first day, and grew search the day compare arrived, with the comment beside
+it saying exactly who it is for. Nothing was built today; a row that said a
+thing was not built when it was is the kind of drift the documentation gate
+cannot see, and it was fixed by reading.
+
+**Still open.** R1–R5, unchanged: a tape measure, a LiDAR phone, a doorway,
+a lawyer's hour, four readers. Nothing on this project is code any more.
